@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  images: {
-    domains: ["res.cloudinary.com"],
+const config = {
+  experimental: {
+    esmExternals: 'loose',
   },
 };
 
-export default nextConfig;
+export default config;
