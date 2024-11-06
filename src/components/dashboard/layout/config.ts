@@ -20,6 +20,7 @@ export const layoutConfig = {
         { key: 'analytics', title: 'Analytics', href: paths.dashboard.analytics, icon: 'chart-pie' },
         { key: 'ecommerce', title: 'E-commerce', href: paths.dashboard.eCommerce, icon: 'cube' },
         { key: 'crypto', title: 'Crypto', href: paths.dashboard.crypto, icon: 'currency-eth' },
+        { key: 'reports', title: 'Reports', href: paths.dashboard.reports, icon: 'folder' },
       ],
     },
     {
@@ -153,61 +154,6 @@ export const layoutConfig = {
       key: 'other',
       title: 'Other',
       items: [
-        {
-          key: 'auth',
-          title: 'Auth',
-          icon: 'lock',
-          items: [
-            {
-              key: 'auth:sign-in',
-              title: 'Sign in',
-              items: [
-                { key: 'auth:sign-in:centered', title: 'Centered', href: paths.auth.samples.signIn.centered },
-                { key: 'auth:sign-in:split', title: 'Split', href: paths.auth.samples.signIn.split },
-              ],
-            },
-            {
-              key: 'auth:sign-up',
-              title: 'Sign up',
-              items: [
-                { key: 'auth:sign-up:centered', title: 'Centered', href: paths.auth.samples.signUp.centered },
-                { key: 'auth:sign-up:split', title: 'Split', href: paths.auth.samples.signUp.split },
-              ],
-            },
-            {
-              key: 'auth:reset-password',
-              title: 'Reset password',
-              items: [
-                {
-                  key: 'auth:reset-password:centered',
-                  title: 'Centered',
-                  href: paths.auth.samples.resetPassword.centered,
-                },
-                { key: 'auth:reset-password:split', title: 'Split', href: paths.auth.samples.resetPassword.split },
-              ],
-            },
-            {
-              key: 'auth:update-password',
-              title: 'Update password',
-              items: [
-                {
-                  key: 'auth:update-password:centered',
-                  title: 'Centered',
-                  href: paths.auth.samples.updatePassword.centered,
-                },
-                { key: 'auth:update-password:split', title: 'Split', href: paths.auth.samples.updatePassword.split },
-              ],
-            },
-            {
-              key: 'auth:verify-code',
-              title: 'Verify code',
-              items: [
-                { key: 'auth:verify-code:centered', title: 'Centered', href: paths.auth.samples.verifyCode.centered },
-                { key: 'auth:verify-code:split', title: 'Split', href: paths.auth.samples.verifyCode.split },
-              ],
-            },
-          ],
-        },
         { key: 'pricing', title: 'Pricing', href: paths.pricing, icon: 'credit-card' },
         { key: 'checkout', title: 'Checkout', href: paths.checkout, icon: 'sign-out' },
         { key: 'contact', title: 'Contact', href: paths.contact, icon: 'address-book' },

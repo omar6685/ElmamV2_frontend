@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import MenuItem from '@mui/material/MenuItem';
 
-import { authClient } from '@/lib/auth/custom/client';
+import { authClient } from '@/lib/auth/client';
 import { logger } from '@/lib/default-logger';
 import { useUser } from '@/hooks/use-user';
 import { toast } from '@/components/core/toaster';

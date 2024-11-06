@@ -11,6 +11,7 @@ import { EnvelopeSimple as EnvelopeSimpleIcon } from '@phosphor-icons/react/dist
 import { File as FileIcon } from '@phosphor-icons/react/dist/ssr/File';
 import { FileDashed as FileDashedIcon } from '@phosphor-icons/react/dist/ssr/FileDashed';
 import { FileX as FileXIcon } from '@phosphor-icons/react/dist/ssr/FileX';
+import { Folder } from '@phosphor-icons/react/dist/ssr/Folder';
 import { Gear as GearIcon } from '@phosphor-icons/react/dist/ssr/Gear';
 import { GraduationCap as GraduationCapIcon } from '@phosphor-icons/react/dist/ssr/GraduationCap';
 import { House as HouseIcon } from '@phosphor-icons/react/dist/ssr/House';
@@ -38,6 +39,7 @@ export const icons = {
   'chats-circle': ChatsCircleIcon,
   'credit-card': CreditCardIcon,
   'currency-eth': CurrencyEthIcon,
+  'folder': Folder,
   'envelope-simple': EnvelopeSimpleIcon,
   'file-dashed': FileDashedIcon,
   'file-x': FileXIcon,

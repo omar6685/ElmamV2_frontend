@@ -1,9 +1,6 @@
-import axios from 'axios';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.toString() ?? '';
 
-const instance = axios.create({
-  baseURL: process.env.API_URL,
-  timeout: 1000,
-  headers: { Authorization: `Bearer ${''}` },
-});
-
-export default instance;
+export const endpoints = {
+  signin: `${API_BASE_URL}/auth/login`,
+  signup: `${API_BASE_URL}/auth/signup`,
+};
