@@ -118,7 +118,7 @@ export function SignUpForm(): React.JSX.Element {
         </Typography>
       </Stack>
       <Stack spacing={3}>
-        <Stack spacing={2}>
+        {/* <Stack spacing={2}>
           {oAuthProviders.map(
             (provider): React.JSX.Element => (
               <Button
@@ -137,8 +137,9 @@ export function SignUpForm(): React.JSX.Element {
               </Button>
             )
           )}
-        </Stack>
+        </Stack> 
         <Divider>or</Divider>
+        */}
         <form onSubmit={handleSubmit(onSubmit)}>
           <Stack spacing={2}>
             <Controller
