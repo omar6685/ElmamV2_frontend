@@ -22,13 +22,13 @@ export function SplitLayout({ children }: SplitLayoutProps): React.JSX.Element {
       >
         <Stack spacing={4} sx={{ maxWidth: '700px' }}>
           <Stack spacing={1}>
-            <Typography variant="h4">Welcome to Devias Kit PRO</Typography>
-            <Typography color="text.secondary">
+            <Typography variant="h4">Welcome to Elmam</Typography>
+            <Typography color="text.secondary" className='max-w-96'>
               A professional template that comes with ready-to-use MUI components developed with one common goal in
               mind, help you build faster & beautiful applications.
             </Typography>
           </Stack>
-          <Stack
+          {/* <Stack
             direction="row"
             spacing={3}
             sx={{ alignItems: 'center', color: 'var(--mui-palette-neutral-500)', flexWrap: 'wrap' }}
@@ -101,7 +101,7 @@ export function SplitLayout({ children }: SplitLayoutProps): React.JSX.Element {
                 fillRule="evenodd"
               />
             </svg>
-          </Stack>
+          </Stack> */}
         </Stack>
       </Box>
       <Box sx={{ boxShadow: 'var(--mui-shadows-8)', display: 'flex', flexDirection: 'column' }}>

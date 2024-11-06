@@ -121,7 +121,7 @@ export default function Page(): React.JSX.Element {
                       { key: 'Name', value: 'Miron Vitold' },
                       { key: 'Email', value: 'miron.vitold@domain.com' },
                       { key: 'Phone', value: '(425) 434-5535' },
-                      { key: 'Company', value: 'Devias IO' },
+                      { key: 'Company', value: 'Elmam' },
                       {
                         key: 'Quota',
                         value: (

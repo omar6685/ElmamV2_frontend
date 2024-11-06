@@ -36,7 +36,7 @@ export default function Page({ searchParams }: PageProps): React.JSX.Element {
         <Stack spacing={4}>
           <div>
             <Box component={RouterLink} href={paths.home} sx={{ display: 'inline-block', fontSize: 0 }}>
-              <DynamicLogo colorDark="light" colorLight="dark" height={32} width={122} />
+              <DynamicLogo colorDark="light" colorLight="dark" height={40} width={65} />
             </Box>
           </div>
           <Typography variant="h5">Confirm your email</Typography>

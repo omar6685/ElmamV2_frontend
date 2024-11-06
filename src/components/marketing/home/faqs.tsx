@@ -21,7 +21,7 @@ const faqs = [
   },
   {
     id: 'FAQ-2',
-    question: 'How many projects can I build with Devias Kit PRO?',
+    question: 'How many projects can I build with Elmam Kit PRO?',
     answer:
       "The license is per project (domain), but if you intend to develop an unknown number of projects feel free to contact us and we'll find a solution.",
   },

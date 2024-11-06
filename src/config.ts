@@ -32,7 +32,7 @@ export interface Config {
 
 export const config = {
   site: {
-    name: 'Devias Kit Pro',
+    name: 'Elmam',
     description: '',
     language: 'en',
     themeColor: '#090a0b',

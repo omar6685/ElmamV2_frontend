@@ -94,7 +94,7 @@ export function MobileNav({ onClose, open = false }: MobileNavProps): React.JSX.
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, minHeight: 0 }}>
         <Stack direction="row" spacing={3} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
           <Box component={RouterLink} href={paths.home} sx={{ display: 'inline-flex' }}>
-            <DynamicLogo colorDark="light" colorLight="dark" height={32} width={122} />
+            <DynamicLogo colorDark="light" colorLight="dark" height={40} width={65} />
           </Box>
           <IconButton onClick={onClose}>
             <XIcon />

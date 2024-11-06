@@ -116,7 +116,7 @@ export default function Page(): React.JSX.Element {
                 }}
               >
                 <Stack spacing={1}>
-                  <Typography variant="subtitle1">Devias IO</Typography>
+                  <Typography variant="subtitle1">Elmam</Typography>
                   <Typography variant="body2">
                     2674 Alfred Drive
                     <br />
@@ -124,7 +124,7 @@ export default function Page(): React.JSX.Element {
                     <br />
                     11206
                     <br />
-                    accounts@devias.io
+                    support@elmam.net.sa
                     <br />
                     (+1) 757 737 1980
                   </Typography>

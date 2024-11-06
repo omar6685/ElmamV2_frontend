@@ -90,11 +90,11 @@ export function InvoicePDFDocument(_: InvoicePDFDocumentProps): React.JSX.Elemen
         </View>
         <View style={styles.flexRow}>
           <View style={styles.w50}>
-            <Text style={[styles.fontMedium, styles.gutterBottom]}>Devias IO</Text>
+            <Text style={[styles.fontMedium, styles.gutterBottom]}>Elmam</Text>
             <Text>2674 Alfred Drive</Text>
             <Text>Brooklyn, New York, United States</Text>
             <Text>11206</Text>
-            <Text>accounts@devias.io</Text>
+            <Text>support@elmam.net.sa</Text>
             <Text>(+1) 757 737 1980</Text>
           </View>
           <View style={styles.w50}>

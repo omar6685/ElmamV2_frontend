@@ -24,7 +24,7 @@ const transactions = [
   {
     id: 'TX-004',
     type: 'receive',
-    sender: 'Devias',
+    sender: 'Elmam',
     currency: 'USD',
     amount: 25000,
     createdAt: dayjs().subtract(5, 'minute').toDate(),
@@ -48,7 +48,7 @@ const transactions = [
   {
     id: 'TX-001',
     type: 'receive',
-    sender: 'Devias',
+    sender: 'Elmam',
     currency: 'USD',
     amount: 49550,
     createdAt: dayjs().subtract(3, 'day').toDate(),

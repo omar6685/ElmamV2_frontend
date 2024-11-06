@@ -18,13 +18,13 @@ const reviews = [
     id: 'REV-5',
     author: 'Laurent B.',
     comment:
-      'I keep buying new versions of the template because it is so good and the team at Devias keeps updating it following design trends and updates to NextJS and other libraries [...]',
+      'I keep buying new versions of the template because it is so good and the team at Elmam keeps updating it following design trends and updates to NextJS and other libraries [...]',
   },
   {
     id: 'REV-4',
     author: 'Ali Hassan E.',
     comment:
-      'I am very happy with the Devias template that I purchased. The team at Devias was very responsive and helpful before and after I bought the template. They were always quick to respond to my questions and they provided excellent customer support.',
+      'I am very happy with the Elmam template that I purchased. The team at Elmam was very responsive and helpful before and after I bought the template. They were always quick to respond to my questions and they provided excellent customer support.',
   },
   {
     id: 'REV-3',

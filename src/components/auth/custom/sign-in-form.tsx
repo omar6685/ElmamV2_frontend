@@ -104,7 +104,7 @@ export function SignInForm(): React.JSX.Element {
     <Stack spacing={4}>
       <div>
         <Box component={RouterLink} href={paths.home} sx={{ display: 'inline-block', fontSize: 0 }}>
-          <DynamicLogo colorDark="light" colorLight="dark" height={32} width={122} />
+          <DynamicLogo colorDark="light" colorLight="dark" height={40} width={65} />
         </Box>
       </div>
       <Stack spacing={1}>
@@ -117,7 +117,7 @@ export function SignInForm(): React.JSX.Element {
         </Typography>
       </Stack>
       <Stack spacing={3}>
-        <Stack spacing={2}>
+        {/* <Stack spacing={2}>
           {oAuthProviders.map(
             (provider): React.JSX.Element => (
               <Button
@@ -137,7 +137,7 @@ export function SignInForm(): React.JSX.Element {
             )
           )}
         </Stack>
-        <Divider>or</Divider>
+        <Divider>or</Divider> */}
         <Stack spacing={2}>
           <form onSubmit={handleSubmit(onSubmit)}>
             <Stack spacing={2}>

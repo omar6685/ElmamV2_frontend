@@ -100,7 +100,7 @@ export function MainNav({ color = 'evident', items = [] }: MainNavProps): React.
               <ListIcon color="var(--NavItem-icon-color)" />
             </IconButton>
             <Box component={RouterLink} href={paths.home} sx={{ display: { xs: 'none', md: 'inline-block' } }}>
-              <Logo color={logoColor} height={32} width={122} />
+              <Logo color={logoColor} height={40} width={65} />
             </Box>
             <Box sx={{ display: { xs: 'none', md: 'block' } }}>
               <WorkspacesSwitch />

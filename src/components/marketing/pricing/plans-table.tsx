@@ -20,7 +20,7 @@ export function PlansTable(): React.JSX.Element {
               Start today. Boost up your services!
             </Typography>
             <Typography color="text.secondary" sx={{ textAlign: 'center' }} variant="body1">
-              Join 10,000+ developers &amp; designers using Devias to power modern web projects.
+              Join 10,000+ developers &amp; designers using Elmam to power modern web projects.
             </Typography>
             <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
               <Switch defaultChecked />

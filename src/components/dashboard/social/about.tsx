@@ -34,7 +34,7 @@ export function About(): React.JSX.Element {
                   <Typography noWrap variant="subtitle2">
                     Product Designer at{' '}
                     <Link color="text.primary" variant="subtitle2">
-                      Devias IO
+                      Elmam
                     </Link>
                   </Typography>
                 }

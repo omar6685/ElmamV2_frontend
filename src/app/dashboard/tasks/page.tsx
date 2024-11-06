@@ -97,7 +97,7 @@ const tasks = [
   {
     id: 'TSK-004',
     author: { id: 'USR-003', name: 'Carson Darrin', username: 'carson.darrin', avatar: '/assets/avatar-3.png' },
-    title: 'Follow up with Devias team',
+    title: 'Follow up with Elmam team',
     description: 'We need to finish the project as soon as possible',
     columnId: 'COL-003',
     createdAt: dayjs().subtract(3, 'day').toDate(),
@@ -110,7 +110,7 @@ const tasks = [
         id: 'MSG-003',
         author: { id: 'USR-003', name: 'Carson Darrin', username: 'carson.darrin', avatar: '/assets/avatar-3.png' },
         createdAt: dayjs().subtract(2, 'day').toDate(),
-        content: 'Marcus, can you please follow up with the Devias team?',
+        content: 'Marcus, can you please follow up with the Elmam team?',
       },
     ],
   },
