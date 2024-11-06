@@ -34,25 +34,10 @@ export function AuthGuard({ children }: AuthGuardProps): React.JSX.Element | nul
 
       switch (config.auth.strategy) {
         case AuthStrategy.CUSTOM: {
-          router.replace(paths.auth.custom.signIn);
+          router.replace(paths.auth.signIn);
           return;
         }
-        case AuthStrategy.AUTH0: {
-          router.replace(paths.auth.auth0.signIn);
-          return;
-        }
-        case AuthStrategy.COGNITO: {
-          router.replace(paths.auth.cognito.signIn);
-          return;
-        }
-        case AuthStrategy.FIREBASE: {
-          router.replace(paths.auth.firebase.signIn);
-          return;
-        }
-        case AuthStrategy.SUPABASE: {
-          router.replace(paths.auth.supabase.signIn);
-          return;
-        }
+
         default: {
           logger.error('[AuthGuard]: Unknown auth strategy');
           return;

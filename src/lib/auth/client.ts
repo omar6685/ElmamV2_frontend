@@ -1,6 +1,10 @@
 'use client';
 
+import { AxiosResponse } from 'axios';
+
 import type { User } from '@/types/user';
+import apiInstance from '@/lib/api/axios';
+import { endpoints } from '@/lib/api/config';
 
 function generateToken(): string {
   const arr = new Uint8Array(12);
@@ -20,6 +24,7 @@ export interface SignUpParams {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   password: string;
 }
 
@@ -37,14 +42,35 @@ export interface ResetPasswordParams {
 }
 
 class AuthClient {
-  async signUp(_: SignUpParams): Promise<{ error?: string }> {
+  async signUp(params: SignUpParams): Promise<{ error?: string }> {
+    const { firstName, lastName, email, phone, password } = params;
+
     // Make API request
+    try {
+      const response: AxiosResponse<{ access_token: string }> = await apiInstance
+        .post(endpoints.signup, {
+          firstName,
+          lastName,
+          email,
+          phone,
+          password,
+          fcmToken: generateToken(),
+        })
+        .catch((error) => {
+          throw Error();
+        });
 
-    // We do not handle the API, so we'll just generate a token and store it in localStorage.
-    const token = generateToken();
-    localStorage.setItem('custom-auth-token', token);
+      if (response.status === 201) {
+        const data = response.data;
+        localStorage.setItem('auth-token', data.access_token);
 
-    return {};
+        return {};
+      } else {
+        return { error: 'Invalid credentials' };
+      }
+    } catch (error) {
+      return { error: 'Invalid credentials' };
+    }
   }
 
   async signInWithOAuth(_: SignInWithOAuthParams): Promise<{ error?: string }> {
@@ -55,16 +81,31 @@ class AuthClient {
     const { email, password } = params;
 
     // Make API request
+    try {
+      const response: AxiosResponse<{ access_token: string }> = await apiInstance
+        .post(endpoints.signin, {
+          email,
+          password,
+          fcmToken: '',
+        })
+        .catch((error) => {
+          throw Error();
+        });
 
-    // We do not handle the API, so we'll check if the credentials match with the hardcoded ones.
-    if (email !== 'sofia@devias.io' || password !== 'Secret1') {
+      console.log('Response:', response);
+
+      if (response.status === 200) {
+        const data = response.data;
+        localStorage.setItem('auth-token', data.access_token);
+
+        return {};
+      } else {
+        return { error: 'Invalid credentials' };
+      }
+    } catch (error) {
+      console.log('catch error', error);
       return { error: 'Invalid credentials' };
     }
-
-    const token = generateToken();
-    localStorage.setItem('custom-auth-token', token);
-
-    return {};
   }
 
   async resetPassword(_: ResetPasswordParams): Promise<{ error?: string }> {
@@ -79,7 +120,7 @@ class AuthClient {
     // Make API request
 
     // We do not handle the API, so just check if we have a token in localStorage.
-    const token = localStorage.getItem('custom-auth-token');
+    const token = localStorage.getItem('auth-token');
 
     if (!token) {
       return { data: null };
@@ -89,7 +130,7 @@ class AuthClient {
   }
 
   async signOut(): Promise<{ error?: string }> {
-    localStorage.removeItem('custom-auth-token');
+    localStorage.removeItem('auth-token');
 
     return {};
   }
