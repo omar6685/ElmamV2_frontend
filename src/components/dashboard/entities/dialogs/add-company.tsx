@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { LinearProgress } from '@mui/material';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -15,13 +16,26 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { MicrosoftExcelLogo, X as XIcon } from '@phosphor-icons/react';
 import { Trash as TrashIcon } from '@phosphor-icons/react/dist/ssr/Trash';
+import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { Controller, useForm } from 'react-hook-form';
+import { z as zod } from 'zod';
 
 import { logger } from '@/lib/default-logger';
+import { getFirebaseStorage } from '@/lib/storage/firebase/client';
 import { FileDropzone } from '@/components/core/file-dropzone';
 import { toast } from '@/components/core/toaster';
 
-import { Company, companySchema } from '../entity-create-form';
+export const companySchema = zod.object({
+  name: zod.string().min(1, 'Name is required'),
+  crn: zod.string().min(1, 'Commercial registration number is required'),
+  adaptation: zod.boolean().default(false),
+  image: zod.string().nullable(),
+  workersFile: zod.string().nullable(),
+  subscribersListFile: zod.string().nullable(),
+  mainResidentFile: zod.string().nullable(),
+});
+
+export type Company = zod.infer<typeof companySchema>;
 
 export interface CompanyDialogProps {
   action: 'create' | 'update';
@@ -32,6 +46,8 @@ export interface CompanyDialogProps {
   onUpdate?: (companyId: string, params: Company) => void;
   open?: boolean;
 }
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export function AddCompanyDialog({
   action = 'create',
@@ -47,58 +63,124 @@ export function AddCompanyDialog({
     handleSubmit,
     reset,
     formState: { errors },
+    setValue,
   } = useForm<Company>({ defaultValues: {} as Company, resolver: zodResolver(companySchema) });
   const [image, setImage] = React.useState<string | null>('');
   const [workersFile, setWorkersFile] = React.useState<string | null>('');
   const [subscribersListFile, setSubscribersListFile] = React.useState<string | null>('');
   const [mainResidentFile, setMainResidentFile] = React.useState<string | null>('');
-
+  const [fileUploads, setFileUploads] = React.useState<
+    Record<
+      'image' | 'workersFile' | 'subscribersListFile' | 'mainResidentFile',
+      { file: File | null; progress: number }
+    >
+  >({
+    image: { file: null, progress: 0 },
+    workersFile: { file: null, progress: 0 },
+    subscribersListFile: { file: null, progress: 0 },
+    mainResidentFile: { file: null, progress: 0 },
+  });
+  console.log('Errors: ', errors);
   const handleFileDrop = React.useCallback(
-    async ([file]: File[], setFile: React.Dispatch<React.SetStateAction<string | null>>) => {
-      //   const reader = new FileReader();
-      //   reader.readAsDataURL(file);
-      //   reader.onload = () => {
-      //     setFile(reader.result as string);
-      //   };
-      // check if file is image and apply the above else assign its name to the state
-      if (file.type.includes('image')) {
+    (
+      file: File,
+      setFile: React.Dispatch<React.SetStateAction<string | null>>,
+      fileType: 'image' | 'workersFile' | 'subscribersListFile' | 'mainResidentFile'
+    ) => {
+      if (file.size > MAX_FILE_SIZE) {
+        alert('File size exceeds 5MB');
+        return;
+      }
+      if (fileType === 'image') {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = () => {
+        reader.onload = (event) => {
           setFile(reader.result as string);
+          setValue(fileType, reader.result as string);
         };
+        reader.readAsDataURL(file);
       } else {
+        console.log(file.name);
         setFile(file.name);
+        setValue(fileType, file.name);
       }
+      setFileUploads((prevUploads) => ({ ...prevUploads, [fileType]: { file, progress: 0 } }));
     },
     []
   );
 
-  const onSubmit = React.useCallback(
-    async (values: Company): Promise<void> => {
-      try {
-        const params = {
-          name: values.name,
-          crn: values.crn,
-          adaptation: values.adaptation,
-          image: values.image,
-          workersFile: values.workersFile,
-          subscribersListFile: values.subscribersListFile,
-          mainResidentFile: values.mainResidentFile,
-        } satisfies Company | Company;
+  const uploadFile = (file: File, fileType: 'image' | 'workersFile' | 'subscribersListFile' | 'mainResidentFile') => {
+    console.log(`uploading file ${file.name} of type ${fileType} to firebase storage`);
+    const storage = getFirebaseStorage();
+    return new Promise((resolve, reject) => {
+      const storageRef = ref(storage, `companies/${fileType}/${file.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
 
-        if (action === 'update') {
-          onUpdate?.(company!.crn, params);
-        } else {
-          onCreate?.(params);
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setFileUploads((prevUploads) => ({
+            ...prevUploads,
+            [fileType]: { ...prevUploads[fileType], progress },
+          }));
+        },
+        (error) => {
+          console.error('Upload failed:', error);
+          reject(error);
+        },
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => resolve(downloadURL));
         }
-      } catch (err) {
-        logger.error(err);
-        toast.error('Something went wrong!');
+      );
+    });
+  };
+
+  const onSubmit = async (
+    values: Company
+    // event: React.BaseSyntheticEvent,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // { reset }: { reset: (values?: any) => void }
+  ) => {
+    try {
+      console.log('Submitting form:', values);
+      // const fileUrls = await Promise.all(
+      //   Object.entries(fileUploads).map(
+      //     async ([fileType, fileData]:
+      //       | [string, { file: File | null; progress: number }]
+      //       | [string, { file: File | null; progress: number }]
+      //       | [string, { file: File | null; progress: number }]
+      //       | [string, { file: File | null; progress: number }]) => {
+      //       if (fileData.file) {
+      //         return uploadFile(
+      //           fileData.file,
+      //           fileType as 'image' | 'workersFile' | 'subscribersListFile' | 'mainResidentFile'
+      //         );
+      //       }
+      //       return null;
+      //     }
+      //   )
+      // );
+
+      const params = {
+        ...values,
+        // image: fileUrls[0] as string,
+        // workersFile: fileUrls[1] as string,
+        // subscribersListFile: fileUrls[2] as string,
+        // mainResidentFile: fileUrls[3] as string,
+      } satisfies Company;
+
+      if (action === 'update' && company?.crn) {
+        onUpdate?.(company.crn, params);
+      } else {
+        onCreate?.(params);
       }
-    },
-    [action, company, onCreate, onUpdate]
-  );
+    } catch (error) {
+      console.error('Error uploading files:', error);
+    } finally {
+      onClose?.();
+    }
+  };
 
   React.useEffect(() => {
     // Reset form when dialog data changes
@@ -167,10 +249,12 @@ export function AddCompanyDialog({
                     accept={{ 'image/*': [] }}
                     caption="(SVG, JPG, PNG, or gif maximum 900x400)"
                     maxFiles={1}
-                    onDrop={(files) => handleFileDrop(files, setImage)}
+                    onDrop={(files) => handleFileDrop(files[0], setImage, 'image')}
                   />
                 )}
-
+                {fileUploads.image.progress > 0 ? (
+                  <LinearProgress sx={{ flex: '1 1 auto' }} value={fileUploads.image.progress} variant="determinate" />
+                ) : null}
                 {errors.image ? <FormHelperText>{errors.image.message}</FormHelperText> : null}
               </FormControl>
             )}
@@ -204,10 +288,16 @@ export function AddCompanyDialog({
                     accept={{ 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [] }}
                     caption="(XLSX, XLS, or CSV)"
                     maxFiles={1}
-                    onDrop={(files) => handleFileDrop(files, setWorkersFile)}
+                    onDrop={(files) => handleFileDrop(files[0], setWorkersFile, 'workersFile')}
                   />
                 )}
-
+                {fileUploads.workersFile.progress > 0 ? (
+                  <LinearProgress
+                    sx={{ flex: '1 1 auto' }}
+                    value={fileUploads.workersFile.progress}
+                    variant="determinate"
+                  />
+                ) : null}
                 {errors.workersFile ? <FormHelperText>{errors.workersFile.message}</FormHelperText> : null}
               </FormControl>
             )}
@@ -240,10 +330,16 @@ export function AddCompanyDialog({
                     accept={{ 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [] }}
                     caption="(XLSX, XLS, or CSV)"
                     maxFiles={1}
-                    onDrop={(files) => handleFileDrop(files, setSubscribersListFile)}
+                    onDrop={(files) => handleFileDrop(files[0], setSubscribersListFile, 'subscribersListFile')}
                   />
                 )}
-
+                {fileUploads.subscribersListFile.progress > 0 ? (
+                  <LinearProgress
+                    sx={{ flex: '1 1 auto' }}
+                    value={fileUploads.subscribersListFile.progress}
+                    variant="determinate"
+                  />
+                ) : null}
                 {errors.subscribersListFile ? (
                   <FormHelperText>{errors.subscribersListFile.message}</FormHelperText>
                 ) : null}
@@ -278,10 +374,16 @@ export function AddCompanyDialog({
                     accept={{ 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [] }}
                     caption="(XLSX, XLS, or CSV)"
                     maxFiles={1}
-                    onDrop={(files) => handleFileDrop(files, setMainResidentFile)}
+                    onDrop={(files) => handleFileDrop(files[0], setMainResidentFile, 'mainResidentFile')}
                   />
                 )}
-
+                {fileUploads.mainResidentFile.progress > 0 ? (
+                  <LinearProgress
+                    sx={{ flex: '1 1 auto' }}
+                    value={fileUploads.mainResidentFile.progress}
+                    variant="determinate"
+                  />
+                ) : null}
                 {errors.mainResidentFile ? <FormHelperText>{errors.mainResidentFile.message}</FormHelperText> : null}
               </FormControl>
             )}
