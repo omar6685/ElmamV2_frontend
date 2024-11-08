@@ -4,13 +4,22 @@ export const paths = {
   contact: '/contact',
   pricing: '/pricing',
   auth: {
-      signIn: '/auth/sign-in',
-      signUp: '/auth/sign-up',
-      resetPassword: '/auth/reset-password',
+    signIn: '/auth/sign-in',
+    signUp: '/auth/sign-up',
+    resetPassword: '/auth/reset-password',
   },
   dashboard: {
     overview: '/dashboard',
-    reports:'/reports',
+    reports: {
+      list: '/dashboard/reports',
+      create: '/dashboard/reports/create',
+      details: (reportId: string) => `/dashboard/reports/${reportId}`,
+    },
+    entities: {
+      list: '/dashboard/entities',
+      create: '/dashboard/entities/create',
+      details: (entityId: string) => `/dashboard/entities/${entityId}`,
+    },
     settings: {
       account: '/dashboard/settings/account',
       billing: '/dashboard/settings/billing',

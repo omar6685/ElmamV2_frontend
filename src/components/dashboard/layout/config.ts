@@ -14,34 +14,27 @@ export const layoutConfig = {
   navItems: [
     {
       key: 'dashboards',
-      title: 'Dashboards',
-      items: [
-        { key: 'overview', title: 'Overview', href: paths.dashboard.overview, icon: 'house' },
-        { key: 'analytics', title: 'Analytics', href: paths.dashboard.analytics, icon: 'chart-pie' },
-        { key: 'ecommerce', title: 'E-commerce', href: paths.dashboard.eCommerce, icon: 'cube' },
-        { key: 'crypto', title: 'Crypto', href: paths.dashboard.crypto, icon: 'currency-eth' },
-        { key: 'reports', title: 'Reports', href: paths.dashboard.reports, icon: 'folder' },
-      ],
+      title: 'Dashboard',
+      items: [{ key: 'overview', title: 'Overview', href: paths.dashboard.overview, icon: 'house' }],
     },
     {
       key: 'general',
       title: 'General',
       items: [
         {
-          key: 'settings',
-          title: 'Settings',
-          href: paths.dashboard.settings.account,
-          icon: 'gear',
-          matcher: { type: 'startsWith', href: '/dashboard/settings' },
+          key: 'reports',
+          title: 'Reports',
+          icon: 'folder',
+          items: [
+            { key: 'reports', title: 'List reports', href: paths.dashboard.reports.list },
+          ],
         },
         {
-          key: 'customers',
-          title: 'Customers',
-          icon: 'users',
+          key: 'entities',
+          title: 'Entities',
+          icon: 'building-office',
           items: [
-            { key: 'customers', title: 'List customers', href: paths.dashboard.customers.list },
-            { key: 'customers:create', title: 'Create customer', href: paths.dashboard.customers.create },
-            { key: 'customers:details', title: 'Customer details', href: paths.dashboard.customers.details('1') },
+            { key: 'entities', title: 'List entities', href: paths.dashboard.entities.list },
           ],
         },
         {

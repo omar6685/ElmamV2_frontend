@@ -15,8 +15,6 @@ export interface Config {
   };
   logLevel: keyof typeof LogLevel;
   auth: { strategy: keyof typeof AuthStrategy };
-  auth0: { secret?: string; baseUrl?: string; issuerBaseUrl?: string; clientId?: string; clientSecret?: string };
-  cognito: { identityPoolId?: string; userPoolClientId?: string; userPoolId?: string };
   firebase: {
     apiKey?: string;
     appId?: string;
@@ -25,7 +23,6 @@ export interface Config {
     projectId?: string;
     storageBucket?: string;
   };
-  supabase: { url?: string; anonKey?: string };
   mapbox: { apiKey?: string };
   gtm?: { id?: string };
 }
@@ -42,18 +39,7 @@ export const config = {
   },
   logLevel: (process.env.NEXT_PUBLIC_LOG_LEVEL as keyof typeof LogLevel) || LogLevel.ALL,
   auth: { strategy: (process.env.NEXT_PUBLIC_AUTH_STRATEGY as keyof typeof AuthStrategy) || AuthStrategy.CUSTOM },
-  auth0: {
-    secret: process.env.AUTH0_SECRET,
-    baseUrl: process.env.AUTH0_BASE_URL,
-    issuerBaseUrl: process.env.AUTH0_ISSUER_BASE_URL,
-    clientId: process.env.AUTH0_CLIENT_ID,
-    clientSecret: process.env.AUTH0_CLIENT_SECRET,
-  },
-  cognito: {
-    identityPoolId: process.env.NEXT_PUBLIC_COGNITO_IDENTITY_POOL_ID,
-    userPoolClientId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID,
-    userPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID,
-  },
+
   firebase: {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
@@ -62,7 +48,6 @@ export const config = {
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   },
-  supabase: { url: process.env.NEXT_PUBLIC_SUPABASE_URL, anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY },
   mapbox: { apiKey: process.env.NEXT_PUBLIC_MAPBOX_API_KEY },
   gtm: { id: process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID },
 } satisfies Config;
