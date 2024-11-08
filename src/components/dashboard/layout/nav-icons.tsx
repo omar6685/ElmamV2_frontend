@@ -1,4 +1,5 @@
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
+import { BuildingOffice } from '@phosphor-icons/react/dist/ssr';
 import { AddressBook as AddressBookIcon } from '@phosphor-icons/react/dist/ssr/AddressBook';
 import { AlignLeft as AlignLeftIcon } from '@phosphor-icons/react/dist/ssr/AlignLeft';
 import { CalendarCheck as CalendarCheckIcon } from '@phosphor-icons/react/dist/ssr/CalendarCheck';
@@ -39,7 +40,8 @@ export const icons = {
   'chats-circle': ChatsCircleIcon,
   'credit-card': CreditCardIcon,
   'currency-eth': CurrencyEthIcon,
-  'folder': Folder,
+  folder: Folder,
+  'building-office': BuildingOffice,
   'envelope-simple': EnvelopeSimpleIcon,
   'file-dashed': FileDashedIcon,
   'file-x': FileXIcon,
