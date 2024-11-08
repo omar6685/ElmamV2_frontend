@@ -35,7 +35,7 @@ import { Payments } from '@/components/dashboard/reports/payments';
 import type { Address } from '@/components/dashboard/reports/shipping-address';
 import { ShippingAddress } from '@/components/dashboard/reports/shipping-address';
 
-export const metadata = { title: `Details | Customers | Dashboard | ${config.site.name}` } satisfies Metadata;
+export const metadata = { title: `Details | Reports | Dashboard | ${config.site.name}` } satisfies Metadata;
 
 export default function Page(): React.JSX.Element {
   return (
@@ -58,7 +58,7 @@ export default function Page(): React.JSX.Element {
               variant="subtitle2"
             >
               <ArrowLeftIcon fontSize="var(--icon-fontSize-md)" />
-              Customers
+              Reports
             </Link>
           </div>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} sx={{ alignItems: 'flex-start' }}>
@@ -117,7 +117,7 @@ export default function Page(): React.JSX.Element {
                 >
                   {(
                     [
-                      { key: 'Customer ID', value: <Chip label="USR-001" size="small" variant="soft" /> },
+                      { key: 'Report ID', value: <Chip label="USR-001" size="small" variant="soft" /> },
                       { key: 'Name', value: 'Miron Vitold' },
                       { key: 'Email', value: 'miron.vitold@domain.com' },
                       { key: 'Phone', value: '(425) 434-5535' },
