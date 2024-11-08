@@ -33,19 +33,7 @@ import { DataTable } from '@/components/core/data-table';
 import { Option } from '@/components/core/option';
 import { toast } from '@/components/core/toaster';
 
-import { AddCompanyDialog } from './dialogs/add-company';
-
-export const companySchema = zod.object({
-  name: zod.string().min(1, 'Name is required'),
-  crn: zod.string().min(1, 'Commercial registration number is required'),
-  adaptation: zod.boolean().default(false),
-  image: zod.string().nullable(),
-  workersFile: zod.string().nullable(),
-  subscribersListFile: zod.string().nullable(),
-  mainResidentFile: zod.string().nullable(),
-});
-
-export type Company = zod.infer<typeof companySchema>;
+import { AddCompanyDialog, Company, companySchema } from './dialogs/add-company';
 
 // You could memoize this function to avoid re-creating the columns on every render.
 function getCompaniesColumns({ onEdit }: { onEdit?: (companyId: string) => void }): ColumnDef<Company>[] {
@@ -139,25 +127,81 @@ function getCompaniesColumns({ onEdit }: { onEdit?: (companyId: string) => void 
 
 const entitiesSchema = zod.object({
   activity: zod.string().min(1, 'Activity is required'),
-  ajirContracts: zod.number().min(0, 'Ajir contracts must be a positive number'),
-  disabled: zod.number().min(0, 'Disabled must be a positive number'),
-  freedJailed: zod.number().min(0, 'Freed jailed must be a positive number'),
-  students: zod.number().min(0, 'Students must be a positive number'),
-  remoteWorker: zod.number().min(0, 'Remote worker must be a positive number'),
-  sportsPlayer: zod.number().min(0, 'Sports player must be a positive number'),
-  lended: zod.number().min(0, 'Lended must be a positive number'),
-  citizenshipExempt: zod
-    .number()
-    .min(0, 'Citizenships exempt from deportation and treated as expatriate must be a positive number'),
-  citizenshipExemptSaudi: zod
-    .number()
-    .min(0, 'Citizenships exempt from deportation and treated as Saudis must be a positive number'),
-  specialForeigner: zod.number().min(0, 'Special foreigners must be a positive number'),
-  displacedTribes: zod.number().min(0, 'Displaced tribes must be a positive number'),
-  gccCitizen: zod.number().min(0, 'GCC citizens must be a positive number'),
-  owner: zod.number().min(0, 'Owner number must be a positive number'),
-  saudisAfterRules: zod.number().min(0, 'Saudis after rules must be a positive number'),
-  foreignersAfterRules: zod.number().min(0, 'Foreigners after rules must be a positive number'),
+  ajirContracts: zod.string().refine(
+    // check if the value is a positive number
+    (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
+    'Ajir contracts must be a positive number'
+  ),
+  disabled: zod.string().refine(
+    // check if the value is a positive number
+    (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
+    'Disabled must be a positive number'
+  ),
+  freedJailed: zod.string().refine(
+    // check if the value is a positive number
+    (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
+    'Freed jailed must be a positive number'
+  ),
+  students: zod.string().refine(
+    // check if the value is a positive number
+    (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
+    'Students must be a positive number'
+  ),
+  remoteWorker: zod.string().refine(
+    // check if the value is a positive number
+    (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
+    'Remote worker must be a positive number'
+  ),
+  sportsPlayer: zod.string().refine(
+    // check if the value is a positive number
+    (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
+    'Sports player must be a positive number'
+  ),
+  lended: zod.string().refine(
+    // check if the value is a positive number
+    (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
+    'Lended must be a positive number'
+  ),
+  citizenshipExempt: zod.string().refine(
+    // check if the value is a positive number
+    (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
+    'Citizenships exempt from deportation and treated as expatriate must be a positive number'
+  ),
+  citizenshipExemptSaudi: zod.string().refine(
+    // check if the value is a positive number
+    (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
+    'Citizenships exempt from deportation and treated as Saudis must be a positive number'
+  ),
+  specialForeigner: zod.string().refine(
+    // check if the value is a positive number
+    (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
+    'Special foreigners must be a positive number'
+  ),
+  displacedTribes: zod.string().refine(
+    // check if the value is a positive number
+    (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
+    'Displaced tribes must be a positive number'
+  ),
+  gccCitizen: zod.string().refine(
+    // check if the value is a positive number
+    (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
+    'GCC citizens must be a positive number'
+  ),
+  owner: zod.string().refine(
+    // check if the value is a positive number
+    (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
+    'Owner number must be a positive number'
+  ),
+  saudisAfterRules: zod.string().refine(
+    // check if the value is a positive number
+    (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
+    'Saudis after rules must be a positive number'
+  ),
+  foreignersAfterRules: zod.string().refine(
+    // check if the value is a positive number
+    (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
+    'Foreigners after rules must be a positive number'
+  ),
   companies: zod
     .array(companySchema)
     .min(1, 'At least one company must be added')
@@ -180,21 +224,21 @@ export type Values = zod.infer<typeof entitiesSchema>;
 
 const defaultValues = {
   activity: '',
-  ajirContracts: 0,
-  disabled: 0,
-  freedJailed: 0,
-  students: 0,
-  remoteWorker: 0,
-  sportsPlayer: 0,
-  lended: 0,
-  citizenshipExempt: 0,
-  citizenshipExemptSaudi: 0,
-  specialForeigner: 0,
-  displacedTribes: 0,
-  gccCitizen: 0,
-  owner: 0,
-  saudisAfterRules: 0,
-  foreignersAfterRules: 0,
+  ajirContracts: '0',
+  disabled: '0',
+  freedJailed: '0',
+  students: '0',
+  remoteWorker: '0',
+  sportsPlayer: '0',
+  lended: '0',
+  citizenshipExempt: '0',
+  citizenshipExemptSaudi: '0',
+  specialForeigner: '0',
+  displacedTribes: '0',
+  gccCitizen: '0',
+  owner: '0',
+  saudisAfterRules: '0',
+  foreignersAfterRules: '0',
   companies: [],
 } satisfies Values;
 
@@ -212,9 +256,10 @@ export function EntityCreateForm(): React.JSX.Element {
   } = useForm<Values>({ defaultValues, resolver: zodResolver(entitiesSchema) });
 
   const onSubmit = React.useCallback(
-    async (_: Values): Promise<void> => {
+    async (values: Values): Promise<void> => {
       try {
         // Make API request
+        console.log('Entity created', values);
         toast.success('Entity created');
         router.push(paths.dashboard.entities.list);
       } catch (err) {
@@ -599,6 +644,7 @@ export function EntityCreateForm(): React.JSX.Element {
           onClose={addCompanyDialog.handleClose}
           onCreate={(params) => {
             // Add company to companies list
+            console.log('Company added:', params);
             setValue('companies', [...getValues('companies'), params]);
             addCompanyDialog.handleClose();
           }}
