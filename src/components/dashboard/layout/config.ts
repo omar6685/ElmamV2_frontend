@@ -14,7 +14,7 @@ export const layoutConfig = {
   navItems: [
     {
       key: 'dashboards',
-      title: 'Dashboards',
+      title: 'Dashboard',
       items: [{ key: 'overview', title: 'Overview', href: paths.dashboard.overview, icon: 'house' }],
     },
     {
@@ -27,6 +27,14 @@ export const layoutConfig = {
           icon: 'folder',
           items: [
             { key: 'reports', title: 'List reports', href: paths.dashboard.reports.list },
+          ],
+        },
+        {
+          key: 'entities',
+          title: 'Entities',
+          icon: 'building-office',
+          items: [
+            { key: 'entities', title: 'List entities', href: paths.dashboard.entities.list },
           ],
         },
         {
