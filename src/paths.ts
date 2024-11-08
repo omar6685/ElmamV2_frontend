@@ -15,6 +15,11 @@ export const paths = {
       create: '/dashboard/reports/create',
       details: (reportId: string) => `/dashboard/reports/${reportId}`,
     },
+    entities: {
+      list: '/dashboard/entities',
+      create: '/dashboard/entities/create',
+      details: (entityId: string) => `/dashboard/entities/${entityId}`,
+    },
     settings: {
       account: '/dashboard/settings/account',
       billing: '/dashboard/settings/billing',
