@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LinearProgress } from '@mui/material';
+import { LinearProgress, Select } from '@mui/material';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -14,7 +14,7 @@ import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { MicrosoftExcelLogo, X as XIcon } from '@phosphor-icons/react';
+import { MicrosoftExcelLogo, Minus, X as XIcon } from '@phosphor-icons/react';
 import { Trash as TrashIcon } from '@phosphor-icons/react/dist/ssr/Trash';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { Controller, useForm } from 'react-hook-form';
@@ -23,6 +23,7 @@ import { z as zod } from 'zod';
 import { logger } from '@/lib/default-logger';
 import { getFirebaseStorage } from '@/lib/storage/firebase/client';
 import { FileDropzone } from '@/components/core/file-dropzone';
+import { Option } from '@/components/core/option';
 import { toast } from '@/components/core/toaster';
 
 export const companySchema = zod.object({
@@ -49,6 +50,17 @@ export interface CompanyDialogProps {
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
+const companies = [
+  {
+    crn: '1234567890',
+    name: 'Company 1',
+  },
+  {
+    crn: '0987654321',
+    name: 'Company 2',
+  },
+];
+
 export function AddCompanyDialog({
   action = 'create',
   company,
@@ -64,6 +76,7 @@ export function AddCompanyDialog({
     reset,
     formState: { errors },
     setValue,
+    getValues,
   } = useForm<Company>({ defaultValues: {} as Company, resolver: zodResolver(companySchema) });
   const [image, setImage] = React.useState<string | null>('');
   const [workersFile, setWorkersFile] = React.useState<string | null>('');
@@ -80,7 +93,7 @@ export function AddCompanyDialog({
     subscribersListFile: { file: null, progress: 0 },
     mainResidentFile: { file: null, progress: 0 },
   });
-  console.log('Errors: ', errors);
+
   const handleFileDrop = React.useCallback(
     (
       file: File,
@@ -96,14 +109,13 @@ export function AddCompanyDialog({
         reader.readAsDataURL(file);
         reader.onload = (event) => {
           setFile(reader.result as string);
-          setValue(fileType, reader.result as string);
         };
-        reader.readAsDataURL(file);
       } else {
         console.log(file.name);
         setFile(file.name);
-        setValue(fileType, file.name);
       }
+      console.log(fileType, file.name);
+      setValue(fileType, file.name);
       setFileUploads((prevUploads) => ({ ...prevUploads, [fileType]: { file, progress: 0 } }));
     },
     []
@@ -113,7 +125,7 @@ export function AddCompanyDialog({
     console.log(`uploading file ${file.name} of type ${fileType} to firebase storage`);
     const storage = getFirebaseStorage();
     return new Promise((resolve, reject) => {
-      const storageRef = ref(storage, `companies/${fileType}/${file.name}`);
+      const storageRef = ref(storage, `companies/${getValues().crn}/${fileType}/${file.name}`);
       const uploadTask = uploadBytesResumable(storageRef, file);
 
       uploadTask.on(
@@ -144,30 +156,31 @@ export function AddCompanyDialog({
   ) => {
     try {
       console.log('Submitting form:', values);
-      // const fileUrls = await Promise.all(
-      //   Object.entries(fileUploads).map(
-      //     async ([fileType, fileData]:
-      //       | [string, { file: File | null; progress: number }]
-      //       | [string, { file: File | null; progress: number }]
-      //       | [string, { file: File | null; progress: number }]
-      //       | [string, { file: File | null; progress: number }]) => {
-      //       if (fileData.file) {
-      //         return uploadFile(
-      //           fileData.file,
-      //           fileType as 'image' | 'workersFile' | 'subscribersListFile' | 'mainResidentFile'
-      //         );
-      //       }
-      //       return null;
-      //     }
-      //   )
-      // );
-
+      console.log('fileUploads:', fileUploads);
+      const fileUrls = await Promise.all(
+        Object.entries(fileUploads).map(
+          async ([fileType, fileData]:
+            | [string, { file: File | null; progress: number }]
+            | [string, { file: File | null; progress: number }]
+            | [string, { file: File | null; progress: number }]
+            | [string, { file: File | null; progress: number }]) => {
+            if (fileData.file) {
+              return uploadFile(
+                fileData.file,
+                fileType as 'image' | 'workersFile' | 'subscribersListFile' | 'mainResidentFile'
+              );
+            }
+            return null;
+          }
+        )
+      );
+      console.log('File URLs:', fileUrls);
       const params = {
         ...values,
-        // image: fileUrls[0] as string,
-        // workersFile: fileUrls[1] as string,
-        // subscribersListFile: fileUrls[2] as string,
-        // mainResidentFile: fileUrls[3] as string,
+        image: fileUrls[0] as string,
+        workersFile: fileUrls[1] as string,
+        subscribersListFile: fileUrls[2] as string,
+        mainResidentFile: fileUrls[3] as string,
       } satisfies Company;
 
       if (action === 'update' && company?.crn) {
@@ -178,7 +191,7 @@ export function AddCompanyDialog({
     } catch (error) {
       console.error('Error uploading files:', error);
     } finally {
-      onClose?.();
+      // onClose?.();
     }
   };
 
@@ -198,11 +211,40 @@ export function AddCompanyDialog({
         <Stack spacing={2} sx={{ p: 3 }}>
           <Controller
             control={control}
+            name="crn"
+            render={({ field }) => (
+              <FormControl error={Boolean(errors.crn)}>
+                <InputLabel>Commercial Registration Number</InputLabel>
+                <Select
+                  onChange={(e) => {
+                    // update both the name and crn fields
+                    const selectedCompany = companies.find((company) => company.crn === e.target.value);
+                    if (selectedCompany?.crn) {
+                      setValue('name', selectedCompany?.name);
+                      setValue('crn', selectedCompany?.crn);
+                    }
+                  }}
+                >
+                  <Option value="">Choose a company</Option>
+                  {companies?.map((company) => (
+                    <Option key={company.crn} value={company.crn}>
+                      {company.name} <Minus className="mx-1" />{' '}
+                      <span className="text-sm text-gray-500">{company.crn}</span>
+                    </Option>
+                  ))}
+                </Select>
+                {errors.crn ? <FormHelperText>{errors.crn.message}</FormHelperText> : null}
+              </FormControl>
+            )}
+          />
+          {/* <Controller
+            control={control}
+            disabled
             name="name"
             render={({ field }) => (
               <FormControl error={Boolean(errors.name)}>
                 <InputLabel>Name</InputLabel>
-                <OutlinedInput {...field} />
+                <OutlinedInput {...field} disabled />
                 {errors.name ? <FormHelperText>{errors.name.message}</FormHelperText> : null}
               </FormControl>
             )}
@@ -210,14 +252,15 @@ export function AddCompanyDialog({
           <Controller
             control={control}
             name="crn"
+            disabled
             render={({ field }) => (
               <FormControl error={Boolean(errors.crn)}>
                 <InputLabel>CRN</InputLabel>
-                <OutlinedInput {...field} />
+                <OutlinedInput {...field} disabled />
                 {errors.crn ? <FormHelperText>{errors.crn.message}</FormHelperText> : null}
               </FormControl>
             )}
-          />
+          /> */}
           <Controller
             control={control}
             name="image"
