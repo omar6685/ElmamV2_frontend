@@ -1,8 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
-import { Button } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -11,22 +9,16 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
 
-export interface ReportCardProps {
+export interface EntityCardProps {
   icon: Icon;
   title: string;
   description: string;
-  href: string;
   soon?: boolean;
 }
 
-export function ReportCard({ icon: Icon, title, description, href, soon }: ReportCardProps): React.JSX.Element {
+export function EntityCard({ icon: Icon, title, description, soon }: EntityCardProps): React.JSX.Element {
   return (
-    <Link href={href}>
-      <Card
-        sx={{
-          position: 'relative',
-        }}
-      >
+      <Card sx={{ position: 'relative' }}>
         <CardContent>
           <Stack direction="row" spacing={3} sx={{ alignItems: 'start' }}>
             {soon && (
@@ -67,6 +59,5 @@ export function ReportCard({ icon: Icon, title, description, href, soon }: Repor
           </Stack>
         </Box>
       </Card>
-    </Link>
   );
 }
