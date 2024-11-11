@@ -30,10 +30,6 @@ import { paths } from '@/paths';
 import { dayjs } from '@/lib/dayjs';
 import { PropertyItem } from '@/components/core/property-item';
 import { PropertyList } from '@/components/core/property-list';
-import { Notifications } from '@/components/dashboard/reports/notifications';
-import { Payments } from '@/components/dashboard/reports/payments';
-import type { Address } from '@/components/dashboard/reports/shipping-address';
-import { ShippingAddress } from '@/components/dashboard/reports/shipping-address';
 
 export const metadata = { title: `Details | Reports | Dashboard | ${config.site.name}` } satisfies Metadata;
 
@@ -172,48 +168,6 @@ export default function Page(): React.JSX.Element {
             }}
           >
             <Stack spacing={4}>
-              <Payments
-                ordersValue={2069.48}
-                payments={[
-                  {
-                    currency: 'USD',
-                    amount: 500,
-                    invoiceId: 'INV-005',
-                    status: 'completed',
-                    createdAt: dayjs().subtract(5, 'minute').subtract(1, 'hour').toDate(),
-                  },
-                  {
-                    currency: 'USD',
-                    amount: 324.5,
-                    invoiceId: 'INV-004',
-                    status: 'refunded',
-                    createdAt: dayjs().subtract(21, 'minute').subtract(2, 'hour').toDate(),
-                  },
-                  {
-                    currency: 'USD',
-                    amount: 746.5,
-                    invoiceId: 'INV-003',
-                    status: 'completed',
-                    createdAt: dayjs().subtract(7, 'minute').subtract(3, 'hour').toDate(),
-                  },
-                  {
-                    currency: 'USD',
-                    amount: 56.89,
-                    invoiceId: 'INV-002',
-                    status: 'completed',
-                    createdAt: dayjs().subtract(48, 'minute').subtract(4, 'hour').toDate(),
-                  },
-                  {
-                    currency: 'USD',
-                    amount: 541.59,
-                    invoiceId: 'INV-001',
-                    status: 'completed',
-                    createdAt: dayjs().subtract(31, 'minute').subtract(5, 'hour').toDate(),
-                  },
-                ]}
-                refundsValue={324.5}
-                totalOrders={5}
-              />
               <Card>
                 <CardHeader
                   action={
@@ -265,56 +219,36 @@ export default function Page(): React.JSX.Element {
                 />
                 <CardContent>
                   <Grid container spacing={3}>
-                    {(
-                      [
-                        {
-                          id: 'ADR-001',
-                          country: 'United States',
-                          state: 'Michigan',
-                          city: 'Lansing',
-                          zipCode: '48933',
-                          street: '480 Haven Lane',
-                          primary: true,
-                        },
-                        {
-                          id: 'ADR-002',
-                          country: 'United States',
-                          state: 'Missouri',
-                          city: 'Springfield',
-                          zipCode: '65804',
-                          street: '4807 Lighthouse Drive',
-                        },
-                      ] satisfies Address[]
-                    ).map((address) => (
+                    {[
+                      {
+                        id: 'ADR-001',
+                        country: 'United States',
+                        state: 'Michigan',
+                        city: 'Lansing',
+                        zipCode: '48933',
+                        street: '480 Haven Lane',
+                        primary: true,
+                      },
+                      {
+                        id: 'ADR-002',
+                        country: 'United States',
+                        state: 'Missouri',
+                        city: 'Springfield',
+                        zipCode: '65804',
+                        street: '4807 Lighthouse Drive',
+                      },
+                    ].map((address) => (
                       <Grid
                         key={address.id}
                         size={{
                           md: 6,
                           xs: 12,
                         }}
-                      >
-                        <ShippingAddress address={address} />
-                      </Grid>
+                      ></Grid>
                     ))}
                   </Grid>
                 </CardContent>
               </Card>
-              <Notifications
-                notifications={[
-                  {
-                    id: 'EV-002',
-                    type: 'Refund request approved',
-                    status: 'pending',
-                    createdAt: dayjs().subtract(34, 'minute').subtract(5, 'hour').subtract(3, 'day').toDate(),
-                  },
-                  {
-                    id: 'EV-001',
-                    type: 'Order confirmation',
-                    status: 'delivered',
-                    createdAt: dayjs().subtract(49, 'minute').subtract(11, 'hour').subtract(4, 'day').toDate(),
-                  },
-                ]}
-              />
             </Stack>
           </Grid>
         </Grid>
