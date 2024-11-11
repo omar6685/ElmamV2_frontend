@@ -318,7 +318,7 @@ function EntityForm(): React.JSX.Element {
           owner: parseInt(values.owner),
           realForeigner: parseInt(values.foreignersAfterRules),
           realSaudi: parseInt(values.saudisAfterRules),
-          commercialRegistrationNumberId: 3,
+          commercialRegistrationNumberId: 2,
           userId: parseInt(user?.sub as string) ?? '',
           activityTableId: parseInt(values.activity),
         });
@@ -331,10 +331,11 @@ function EntityForm(): React.JSX.Element {
             entityId: parseInt(response.data.id),
             adaptation: company.adaptation,
             logoUrl: company.image,
-            commercialRegistrationNumberId: 3,
+            commercialRegistrationNumberId: 2,
             xlsxFileLocal: company.workersFile,
             subscribersXlsxFile: company.subscribersListFile,
             residentXlsxFile: company.mainResidentFile,
+            nationalities: company.nationalities,
           };
         });
 
@@ -389,6 +390,7 @@ function EntityForm(): React.JSX.Element {
         }
       });
   }, []);
+  
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>

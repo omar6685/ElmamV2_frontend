@@ -30,7 +30,7 @@ import { z as zod } from 'zod';
 
 import { paths } from '@/paths';
 import apiInstance from '@/lib/api/axios';
-import { ICreateEntityResponse } from '@/lib/api/types';
+import { ICreateEntityResponse, ICreateNationalityReport, IGetCrnEntity } from '@/lib/api/types';
 import { authClient } from '@/lib/auth/client';
 import { dayjs } from '@/lib/dayjs';
 import { logger } from '@/lib/default-logger';
@@ -41,23 +41,24 @@ import { DataTable } from '@/components/core/data-table';
 import { Option } from '@/components/core/option';
 import { toast } from '@/components/core/toaster';
 
-import { useActivities } from './hooks/useCompanies';
+import { useCrnEntities } from './hooks/useCrnEntities';
+import { NationalitiesReportCard } from './nationalities-report-card';
 
 const entitiesSchema = zod.object({
-  name: zod.string().min(1, 'Name is required'),
-  crn: zod.string().min(1, 'Commercial registration number is required'),
+  crnId: zod.string().min(1, 'Commercial registration number is required'),
+  entityId: zod.string().min(1, 'Entity ID is required'),
 });
 
 export type Values = zod.infer<typeof entitiesSchema>;
 
 const defaultValues = {
-  name: '',
-  crn: '',
+  crnId: '',
+  entityId: '',
 } satisfies Values;
 
 function EntityForm(): React.JSX.Element {
   const router = useRouter();
-  const addCompanyDialog = useDialog();
+  const { isLoading, error, data: companies, isFetching } = useCrnEntities();
 
   const {
     control,
@@ -74,10 +75,14 @@ function EntityForm(): React.JSX.Element {
         const { data: user } = await authClient.getUser();
 
         // Make API request
-        console.log('Entity created', values);
+        // 01. Create report
+        const response: AxiosResponse<ICreateNationalityReport> = await apiInstance.post('reports/nationality', {
+          entityId: parseInt(values.entityId, 10),
+          userId: parseInt(user?.sub as string, 10),
+        });
 
-        toast.success('Entity created');
-        router.push(paths.dashboard.entities.list);
+        toast.success('Nationality report created');
+        router.push(paths.dashboard.reports.list);
       } catch (err) {
         logger.error(err);
         toast.error('Something went wrong!');
@@ -86,83 +91,46 @@ function EntityForm(): React.JSX.Element {
     [router]
   );
 
-  const handleAdd = React.useCallback(() => {
-    addCompanyDialog.handleOpen();
-  }, [addCompanyDialog]);
-
-  const handleRemoveFolder = React.useCallback((crn: string) => {
-    // Initialize Firebase storage
-    const storage = getFirebaseStorage();
-    const folderRef: StorageReference = ref(storage, `companies/${crn}`);
-
-    // List all files in the folder and delete them
-    listAll(folderRef)
-      .then((res: any) => {
-        // Create an array of promises to delete each item
-        const deletePromises = res.items.map((itemRef: StorageReference) => deleteObject(itemRef));
-
-        // Wait for all deletions to complete
-        Promise.all(deletePromises)
-          .then(() => {
-            toast.success('Company folder removed');
-          })
-          .catch((error) => {
-            console.log(error);
-            toast.error('Failed to delete all items in the folder');
-          });
-      })
-      .catch((error) => {
-        if (error.code === 'storage/object-not-found') {
-          toast.error('Folder does not exist');
-        } else {
-          console.log(error);
-          toast.error('Something went wrong!');
-        }
-      });
-  }, []);
-
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Card>
         <CardContent>
           <Stack divider={<Divider />} spacing={4}>
-            <Grid
-              size={{
-                // full width on mobile
-                xs: 12,
-                // half width on desktop
-                md: 12,
-              }}
-            >
+            <>
               <Controller
                 control={control}
-                name="crn"
+                name="crnId"
                 render={({ field }) => (
-                  <FormControl error={Boolean(errors.crn)}>
+                  <FormControl error={Boolean(errors.crnId)}>
                     <InputLabel>Commercial Registration Number</InputLabel>
                     <Select
                       onChange={(e) => {
                         // update both the name and crn fields
-                        const selectedCompany: any = [].find((company: any) => company.crn === e.target.value);
-                        if (selectedCompany?.crn) {
-                          setValue('name', selectedCompany?.name);
-                          setValue('crn', selectedCompany?.crn);
+                        const selectedCompany = companies?.find(
+                          (company: IGetCrnEntity) => company.commercialRegistrationNumberId === e.target.value
+                        );
+                        if (selectedCompany?.commercialRegistrationNumberId) {
+                          setValue('crnId', selectedCompany?.commercialRegistrationNumberId);
+                          setValue('entityId', selectedCompany?.entityId);
                         }
                       }}
                     >
                       <Option value="">Choose a company</Option>
-                      {[]?.map((company: any) => (
-                        <Option key={company.crn} value={company.crn}>
-                          {company.name} <Minus className="mx-1" />{' '}
-                          <span className="text-sm text-gray-500">{company.crn}</span>
+                      {companies?.map((company: IGetCrnEntity) => (
+                        <Option
+                          key={company.commercialRegistrationNumberId}
+                          value={company.commercialRegistrationNumberId}
+                        >
+                          {company.commercialRegistrationNumberId} <Minus className="mx-1" />{' '}
+                          <span className="text-sm text-gray-500">{company.commercialRegistrationNumberId}</span>
                         </Option>
                       ))}
                     </Select>
-                    {errors.crn ? <FormHelperText>{errors.crn.message}</FormHelperText> : null}
+                    {errors.crnId ? <FormHelperText>{errors.crnId.message}</FormHelperText> : null}
                   </FormControl>
                 )}
               />
-            </Grid>
+            </>
           </Stack>
         </CardContent>
         <CardActions sx={{ justifyContent: 'flex-end' }}>
@@ -179,9 +147,24 @@ function EntityForm(): React.JSX.Element {
 const queryClient = new QueryClient();
 
 export function NationalitiesReportCreateForm() {
+  const nationalitiesReportDialog = useDialog();
+
   return (
     <QueryClientProvider client={queryClient}>
       <EntityForm />
+      {nationalitiesReportDialog.open ? (
+        <NationalitiesReportCard
+          onClose={nationalitiesReportDialog.handleClose}
+          open={nationalitiesReportDialog.open}
+          report={{
+            name: 'Annual Nationality Report',
+            result:
+              'هندي 31 38.75%, فلبيني 1 1.25%, نيبالي 7 8.75%, باكستاني 4 5%, مصرى 5 6.25%, سعودي 8 10%, يمني 15 18.75%, سوداني 1 1.25%',
+            saudis: 8,
+            totalEmployees: 72,
+          }}
+        />
+      ) : null}
     </QueryClientProvider>
   );
 }
