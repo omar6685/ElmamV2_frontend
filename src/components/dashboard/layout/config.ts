@@ -148,7 +148,7 @@ export const layoutConfig = {
       title: 'Other',
       items: [
         { key: 'pricing', title: 'Pricing', href: paths.pricing, icon: 'credit-card' },
-        { key: 'checkout', title: 'Checkout', href: paths.checkout, icon: 'sign-out' },
+        { key: 'checkout', title: 'Checkout', href: '#', icon: 'sign-out' },
         { key: 'contact', title: 'Contact', href: paths.contact, icon: 'address-book' },
         {
           key: 'error',

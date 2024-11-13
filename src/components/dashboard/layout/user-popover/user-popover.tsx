@@ -25,7 +25,7 @@ const user = {
   name: 'Sofia Rivers',
   avatar: '/assets/avatar.png',
   email: 'sofia@devias.io',
-} satisfies User;
+} 
 
 export interface UserPopoverProps {
   anchorEl: null | Element;
