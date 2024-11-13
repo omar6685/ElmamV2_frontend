@@ -17,11 +17,11 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { Flag, Plus } from '@phosphor-icons/react';
+import { Flag, Minus, Plus, Printer } from '@phosphor-icons/react';
 import { ArrowLeft as ArrowLeftIcon } from '@phosphor-icons/react/dist/ssr/ArrowLeft';
 import { Folder as FolderIcon } from '@phosphor-icons/react/dist/ssr/Folder';
+import { Info as InfoIcon } from '@phosphor-icons/react/dist/ssr/Info';
 import { PencilSimple as PencilSimpleIcon } from '@phosphor-icons/react/dist/ssr/PencilSimple';
-import { ShieldWarning as ShieldWarningIcon } from '@phosphor-icons/react/dist/ssr/ShieldWarning';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { QueryClient, QueryClientProvider } from 'react-query';
@@ -269,6 +269,7 @@ function SingleReport({ params }: { params: { reportId: string } }): React.JSX.E
         p: 'var(--Content-padding)',
         width: 'var(--Content-width)',
       }}
+      id="nationality-report-card"
     >
       <Stack spacing={4}>
         <Stack spacing={3}>
@@ -302,8 +303,12 @@ function SingleReport({ params }: { params: { reportId: string } }): React.JSX.E
               </div>
             </Stack>
             <div className="min-w-64 flex items-center justify-end">
-              <Button endIcon={<Plus />} variant="contained">
-                Create report
+              <Button
+                endIcon={<Printer />}
+                variant="contained"
+                onClick={() => generatePDF(nationalityReport?.name || '')}
+              >
+                Print report
               </Button>
             </div>
           </Stack>
@@ -316,6 +321,37 @@ function SingleReport({ params }: { params: { reportId: string } }): React.JSX.E
             }}
           >
             <Stack spacing={4}>
+              <Card>
+                <CardHeader
+                  avatar={
+                    <Avatar>
+                      <InfoIcon fontSize="var(--Icon-fontSize)" />
+                    </Avatar>
+                  }
+                  title="Disclaimer"
+                />
+                <CardContent>
+                  <Stack spacing={1}>
+                    {[
+                      'This report presents the proportions of nationalities in unified number establishments, enabling employers to determine the number of individuals they can recruit from each nationality.',
+                      'The maximum percentages for nationalities announced by the Ministry of Human Resources are: 40% for Indian and Bangladeshi nationalities, 25% for Yemeni nationality, and 1% for Ethiopian nationality.',
+                      'The report is based on the assumption that the maximum limit for each nationality is 40%, except for nationalities specified by the Ministry of Human Resources. Adhering to this assumption is recommended to avoid exceeding the maximum limits for nationalities during transfer of sponsorship or issuance of new visas.',
+                      "It's essential to understand that the number that can be added without exceeding the allowed limit does not represent a recruitment quota but rather the maximum number allowed for each nationality, provided that the establishment has a recruitment quota available.",
+                    ].map(
+                      (item): React.JSX.Element => (
+                        <Typography
+                          color="text.secondary"
+                          variant="body2"
+                          className="my-1 flex items-center gap-x-2 p-2"
+                        >
+                          <Minus /> <span>{item}</span>
+                        </Typography>
+                      )
+                    )}
+                  </Stack>
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardHeader
                   action={
@@ -378,7 +414,7 @@ function SingleReport({ params }: { params: { reportId: string } }): React.JSX.E
                 <CardHeader
                   avatar={
                     <Avatar>
-                      <ShieldWarningIcon fontSize="var(--Icon-fontSize)" />
+                      <InfoIcon fontSize="var(--Icon-fontSize)" />
                     </Avatar>
                   }
                   title="Security"
