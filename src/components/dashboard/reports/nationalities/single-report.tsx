@@ -113,11 +113,15 @@ export function NationalitiesTable({
   reportId,
 }: NationalitiesTableProps): React.JSX.Element {
   const { isLoading, data: originalReport } = useGetNationalityReport({ id: reportId });
-
-  const totalOriginalEmployees = originalReport?.totalEmployees || 0;
+  const totalOriginalEmployees = Number(originalReport?.totalEmployees) - Number(originalReport?.saudis);
   const originalNationalities = originalReport ? extractNationalities(originalReport) : [];
-
   const [nationalityData, setNationalityData] = React.useState<Nationality[]>(originalNationalities);
+
+  React.useEffect(() => {
+    if (originalReport) {
+      setNationalityData(extractNationalities(originalReport));
+    }
+  }, [originalReport]);
 
   if (isLoading) {
     return (
@@ -130,29 +134,32 @@ export function NationalitiesTable({
   const handleRequiredNumberChange = (index: number, value: number) => {
     if (value < 0) return;
 
-    setNationalityData((prevData) =>
-      prevData.map((nat, i) => {
+    setNationalityData((prevData) => {
+      const updatedData = prevData.map((nat, i) => {
         if (i === index) {
-          const originalNat = originalNationalities[i];
-          const updatedCount = originalNat.count + value;
-          const updatedPercentage = Number(((updatedCount / (totalOriginalEmployees + value)) * 100).toFixed(2));
-          const updatedMaxAdditionCount = calculateMaxAdditionCount(
-            originalNat.name,
-            updatedCount,
-            totalOriginalEmployees
-          );
-
+          const updatedCount = originalNationalities[i].count + value;
           return {
             ...nat,
             count: updatedCount,
-            percentage: updatedPercentage,
-            maxAdditionCount: updatedMaxAdditionCount,
             requiredNumberToAdd: value,
           };
         }
-        return nat; // Return unchanged data for other rows
-      })
-    );
+        return nat;
+      });
+
+      // Recalculate total employees and adjust percentages
+      const updatedTotalEmployees =
+        totalOriginalEmployees + updatedData.reduce((acc, curr) => acc + curr.requiredNumberToAdd, 0);
+      return updatedData.map((nat) => {
+        const originalNat = originalNationalities.find((on) => on.name === nat.name);
+        const updatedPercentage = Number(((nat.count / updatedTotalEmployees) * 100).toFixed(2));
+        return {
+          ...nat,
+          percentage: updatedPercentage,
+          maxAdditionCount: calculateMaxAdditionCount(originalNat?.name || '', nat.count, updatedTotalEmployees),
+        };
+      });
+    });
   };
 
   return (
@@ -230,6 +237,9 @@ export function NationalitiesTable({
                 ]}
                 rows={nationalityData}
               />
+              {/* <span>Sum percentage: {nationalityData.reduce((acc, curr) => acc + curr.percentage, 0)}%</span> */}
+              {/* <br /> */}
+              {/* <span>Total employees: {totalEmployees}</span> */}
             </Box>
           </Card>
         </Stack>
@@ -385,12 +395,12 @@ function SingleReport({ params }: { params: { reportId: string } }): React.JSX.E
                           <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
                             <LinearProgress
                               sx={{ flex: '1 1 auto' }}
-                              value={calculateSaudisPercentage() > 100 ? 100 : calculateSaudisPercentage()}
+                              value={calculateSaudisPercentage()}
                               variant="determinate"
                             />
                             <Typography color="text.secondary" variant="body2">
-                              {calculateSaudisPercentage() > 100 ? 100 : calculateSaudisPercentage()}% (
-                              {nationalityReport?.saudis} out of {nationalityReport?.totalEmployees})
+                              {calculateSaudisPercentage()}% ({nationalityReport?.saudis} out of{' '}
+                              {nationalityReport?.totalEmployees})
                             </Typography>
                           </Stack>
                         ),

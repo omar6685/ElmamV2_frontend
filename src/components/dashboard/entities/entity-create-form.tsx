@@ -20,7 +20,7 @@ import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { CloudArrowUp, Plus, Trash } from '@phosphor-icons/react';
+import { CloudArrowDown, Trash } from '@phosphor-icons/react';
 import { PlusCircle as PlusCircleIcon } from '@phosphor-icons/react/dist/ssr/PlusCircle';
 import { AxiosResponse } from 'axios';
 import { deleteObject, listAll, ref, StorageReference } from 'firebase/storage';
@@ -89,9 +89,7 @@ function getCompaniesColumns({
       formatter: (row): React.JSX.Element => (
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
           <Link href={row.workersFile as string} target="_blank">
-            <Button variant="outlined" startIcon={<CloudArrowUp />}>
-              Workers File
-            </Button>
+            <CloudArrowDown className="h-6 w-6" />
           </Link>
         </Stack>
       ),
@@ -102,9 +100,7 @@ function getCompaniesColumns({
       formatter: (row): React.JSX.Element => (
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
           <Link href={row.workersFile as string} target="_blank">
-            <Button variant="outlined" startIcon={<CloudArrowUp />}>
-              Subscribers List File
-            </Button>
+            <CloudArrowDown className="h-6 w-6" />
           </Link>
         </Stack>
       ),
@@ -115,9 +111,7 @@ function getCompaniesColumns({
       formatter: (row): React.JSX.Element => (
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
           <Link href={row.workersFile as string} target="_blank">
-            <Button variant="outlined" startIcon={<CloudArrowUp />}>
-              Main Resident File
-            </Button>
+            <CloudArrowDown className="h-6 w-6" />
           </Link>
         </Stack>
       ),
@@ -318,7 +312,7 @@ function EntityForm(): React.JSX.Element {
           owner: parseInt(values.owner),
           realForeigner: parseInt(values.foreignersAfterRules),
           realSaudi: parseInt(values.saudisAfterRules),
-          commercialRegistrationNumberId: 4,
+          commercialRegistrationNumberId: 2,
           userId: parseInt(user?.sub as string) ?? '',
           activityTableId: parseInt(values.activity),
         });
@@ -331,7 +325,7 @@ function EntityForm(): React.JSX.Element {
             entityId: parseInt(response.data.id),
             adaptation: company.adaptation,
             logoUrl: company.image,
-            commercialRegistrationNumberId: 4,
+            commercialRegistrationNumberId: 2,
             xlsxFileLocal: company.workersFile,
             subscribersXlsxFile: company.subscribersListFile,
             residentXlsxFile: company.mainResidentFile,
@@ -390,7 +384,6 @@ function EntityForm(): React.JSX.Element {
         }
       });
   }, []);
-  
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>

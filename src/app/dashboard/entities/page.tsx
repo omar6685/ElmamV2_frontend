@@ -107,7 +107,7 @@ export default function Page({ searchParams }: PageProps): React.JSX.Element {
         </Stack>
         <EntitiesSelectionProvider entities={filteredEntities}>
           <Card>
-            <EntitiesFilters filters={{ email, phone, status }} sortDir={sortDir} />
+            {/* <EntitiesFilters filters={{ email, phone, status }} sortDir={sortDir} /> */}
             <Divider />
             <Box sx={{ overflowX: 'auto' }}>
               <EntitiesTable rows={filteredEntities} />

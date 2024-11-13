@@ -66,7 +66,7 @@ function Reports({ searchParams }: ReportsPageProps): React.JSX.Element {
         </Stack>
         <ReportsSelectionProvider reports={filteredReports}>
           <Card>
-            <ReportsFilters filters={{ email, phone, status }} sortDir={sortDir} />
+            {/* <ReportsFilters filters={{ email, phone, status }} sortDir={sortDir} /> */}
             <Divider />
             <Box sx={{ overflowX: 'auto' }}>
               <ReportsTable rows={nationalityReports ?? []} />
