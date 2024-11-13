@@ -11,19 +11,8 @@ import { Printer } from '@phosphor-icons/react';
 import { Flag as FlagIcon } from '@phosphor-icons/react/dist/ssr/Flag';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import Chip from '@mui/material/Chip';
-import Divider from '@mui/material/Divider';
-import Link from '@mui/material/Link';
-import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
-import { ShoppingCartSimple as ShoppingCartSimpleIcon } from '@phosphor-icons/react/dist/ssr/ShoppingCartSimple';
 
-import { dayjs } from '@/lib/dayjs';
-import type { ColumnDef } from '@/components/core/data-table';
-import { DataTable } from '@/components/core/data-table';
 import { ICreateNationalityReport } from '@/lib/api/types';
-
-
-
 
 export interface NationalitiesReportCardProps {
   onClose: () => void;

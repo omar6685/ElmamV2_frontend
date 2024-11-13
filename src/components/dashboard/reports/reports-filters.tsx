@@ -125,7 +125,7 @@ export function ReportsFilters({ filters = {}, sortDir = 'desc' }: ReportsFilter
       <Divider />
       <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flexWrap: 'wrap', px: 3, py: 2 }}>
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flex: '1 1 auto', flexWrap: 'wrap' }}>
-          <FilterButton
+          {/* <FilterButton
             displayValue={email}
             label="Email"
             onFilterApply={(value) => {
@@ -148,7 +148,7 @@ export function ReportsFilters({ filters = {}, sortDir = 'desc' }: ReportsFilter
             }}
             popover={<PhoneFilterPopover />}
             value={phone}
-          />
+          /> */}
           {hasFilters ? <Button onClick={handleClearFilters}>Clear filters</Button> : null}
         </Stack>
         {selection.selectedAny ? (
@@ -161,10 +161,10 @@ export function ReportsFilters({ filters = {}, sortDir = 'desc' }: ReportsFilter
             </Button>
           </Stack>
         ) : null}
-        <Select name="sort" onChange={handleSortChange} sx={{ maxWidth: '100%', width: '120px' }} value={sortDir}>
+        {/* <Select name="sort" onChange={handleSortChange} sx={{ maxWidth: '100%', width: '120px' }} value={sortDir}>
           <Option value="desc">Newest</Option>
           <Option value="asc">Oldest</Option>
-        </Select>
+        </Select> */}
       </Stack>
     </div>
   );

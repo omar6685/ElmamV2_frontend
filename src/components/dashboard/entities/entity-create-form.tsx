@@ -318,7 +318,7 @@ function EntityForm(): React.JSX.Element {
           owner: parseInt(values.owner),
           realForeigner: parseInt(values.foreignersAfterRules),
           realSaudi: parseInt(values.saudisAfterRules),
-          commercialRegistrationNumberId: 2,
+          commercialRegistrationNumberId: 4,
           userId: parseInt(user?.sub as string) ?? '',
           activityTableId: parseInt(values.activity),
         });
@@ -331,7 +331,7 @@ function EntityForm(): React.JSX.Element {
             entityId: parseInt(response.data.id),
             adaptation: company.adaptation,
             logoUrl: company.image,
-            commercialRegistrationNumberId: 2,
+            commercialRegistrationNumberId: 4,
             xlsxFileLocal: company.workersFile,
             subscribersXlsxFile: company.subscribersListFile,
             residentXlsxFile: company.mainResidentFile,

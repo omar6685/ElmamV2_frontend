@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import RouterLink from 'next/link';
+import { CircularProgress, OutlinedInput } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -18,13 +19,9 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Flag, Plus } from '@phosphor-icons/react';
 import { ArrowLeft as ArrowLeftIcon } from '@phosphor-icons/react/dist/ssr/ArrowLeft';
-import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
-import { CheckCircle as CheckCircleIcon } from '@phosphor-icons/react/dist/ssr/CheckCircle';
 import { Folder as FolderIcon } from '@phosphor-icons/react/dist/ssr/Folder';
 import { PencilSimple as PencilSimpleIcon } from '@phosphor-icons/react/dist/ssr/PencilSimple';
-import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import { ShieldWarning as ShieldWarningIcon } from '@phosphor-icons/react/dist/ssr/ShieldWarning';
-import { ShoppingCartSimple as ShoppingCartSimpleIcon } from '@phosphor-icons/react/dist/ssr/ShoppingCartSimple';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { QueryClient, QueryClientProvider } from 'react-query';
@@ -61,7 +58,7 @@ const calculateMaxAdditionCount = (name: string, count: number, totalEmployees: 
     increment += 1;
     actualPercentage = ((count + increment) / (totalEmployees + increment)) * 100;
   }
-  return Math.max(0, increment - 1);
+  return Number(Math.max(0, increment - 1).toFixed(2));
 };
 
 // PDF generation function
@@ -104,6 +101,7 @@ export function NationalitiesTable({ nationalities, totalEmployees }: Nationalit
   );
 
   const handleRequiredNumberChange = (index: number, value: number) => {
+    if (value <= 0) return;
     setNationalityData((prevData) =>
       prevData.map((nat, i) =>
         i === index
@@ -111,7 +109,7 @@ export function NationalitiesTable({ nationalities, totalEmployees }: Nationalit
               ...nat,
               requiredNumberToAdd: value,
               maxAdditionCount: calculateMaxAdditionCount(nat.name, nat.count + value, totalEmployees),
-              maxAdditionPercentage: ((nat.count + value) / (totalEmployees + value)) * 100,
+              maxAdditionPercentage: Number((((nat.count + value) / (totalEmployees + value)) * 100).toFixed(2)),
             }
           : nat
       )
@@ -121,11 +119,6 @@ export function NationalitiesTable({ nationalities, totalEmployees }: Nationalit
   return (
     <Card>
       <CardHeader
-        action={
-          <Button color="secondary" startIcon={<PlusIcon />}>
-            Add Nationality
-          </Button>
-        }
         avatar={
           <Avatar>
             <Flag fontSize="var(--Icon-fontSize)" />
@@ -139,20 +132,50 @@ export function NationalitiesTable({ nationalities, totalEmployees }: Nationalit
             <Box sx={{ overflowX: 'auto' }}>
               <DataTable<Nationality>
                 columns={[
-                  { label: 'Nationality', key: 'name' },
-                  { label: 'Count', key: 'count' },
-                  { label: 'Percentage', key: 'percentage', format: (val) => `${val}%` },
-                  { label: 'Max Addition Count', key: 'maxAdditionCount' },
                   {
-                    label: 'Max Addition Percentage',
-                    key: 'maxAdditionPercentage',
-                    format: (val) => `${val.toFixed(2)}%`,
+                    name: 'Nationality',
+                    formatter: (row): React.JSX.Element => (
+                      <Typography sx={{ whiteSpace: 'nowrap' }} variant="inherit">
+                        {row.name}
+                      </Typography>
+                    ),
                   },
                   {
-                    label: 'Required Number to Add',
-                    key: 'requiredNumberToAdd',
-                    render: (row, index) => (
-                      <input
+                    name: 'Count',
+                    formatter: (row): React.JSX.Element => (
+                      <Typography sx={{ whiteSpace: 'nowrap' }} variant="inherit">
+                        {row.count}
+                      </Typography>
+                    ),
+                  },
+                  {
+                    name: 'Percentage',
+                    formatter: (row): React.JSX.Element => (
+                      <Typography sx={{ whiteSpace: 'nowrap' }} variant="inherit">
+                        {row.percentage}%
+                      </Typography>
+                    ),
+                  },
+                  {
+                    name: 'Max Addition',
+                    formatter: (row): React.JSX.Element => (
+                      <Typography sx={{ whiteSpace: 'nowrap' }} variant="inherit">
+                        {row.maxAdditionCount}
+                      </Typography>
+                    ),
+                  },
+                  {
+                    name: 'Max Addition Percentage',
+                    formatter: (row): React.JSX.Element => (
+                      <Typography sx={{ whiteSpace: 'nowrap' }} variant="inherit">
+                        {row.maxAdditionPercentage}%
+                      </Typography>
+                    ),
+                  },
+                  {
+                    name: 'Required Number to Add',
+                    formatter: (row, index): React.JSX.Element => (
+                      <OutlinedInput
                         type="number"
                         value={row.requiredNumberToAdd}
                         onChange={(e) => handleRequiredNumberChange(index, parseInt(e.target.value))}
@@ -184,6 +207,34 @@ function SingleReport({ params }: { params: { reportId: string } }): React.JSX.E
     if (!nationalityReport) return 0;
     return parseInt((((nationalityReport.saudis || 0) / (nationalityReport.totalEmployees || 0)) * 100).toString(), 10);
   };
+
+  // create a function to extract the nationalities from the report result field
+  // ex: result: "هندي,31,48.44%|فلبيني,1,1.56%|نيبالي,7,10.94%|باكستاني,4,6.25%|مصرى,5,7.81%|يمني,15,23.44%|سوداني,1,1.56%"
+  const extractNationalities = (result: string): Nationality[] => {
+    return result.split('|').map((entry) => {
+      const [name, countStr, percentageStr] = entry.split(',').filter(Boolean);
+      return {
+        name,
+        count: parseInt(countStr, 10),
+        percentage: parseFloat(percentageStr),
+        maxAdditionCount: calculateMaxAdditionCount(
+          name,
+          parseInt(countStr, 10),
+          nationalityReport?.totalEmployees || 0
+        ),
+        maxAdditionPercentage: calculateAllowedPercentage(name),
+        requiredNumberToAdd: 0,
+      };
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -221,11 +272,11 @@ function SingleReport({ params }: { params: { reportId: string } }): React.JSX.E
                   /> */}
                 </Stack>
                 <Typography color="text.secondary" variant="body1">
-                  {nationalityReport?.createdAt}
+                  {dayjs(nationalityReport?.createdAt).format('MMM D, YYYY hh:mm A')}
                 </Typography>
               </div>
             </Stack>
-            <div>
+            <div className="min-w-64 flex items-center justify-end">
               <Button endIcon={<Plus />} variant="contained">
                 Create report
               </Button>
@@ -290,6 +341,12 @@ function SingleReport({ params }: { params: { reportId: string } }): React.JSX.E
                   )}
                 </PropertyList>
               </Card>
+
+              <NationalitiesTable
+                nationalities={extractNationalities(nationalityReport?.result || '')}
+                totalEmployees={nationalityReport?.totalEmployees || 0}
+              />
+
               <Card>
                 <CardHeader
                   avatar={
@@ -310,19 +367,6 @@ function SingleReport({ params }: { params: { reportId: string } }): React.JSX.E
                       A deleted report cannot be recovered. All the data will be lost.
                     </Typography>
                   </Stack>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader
-                  avatar={
-                    <Avatar>
-                      <ShieldWarningIcon fontSize="var(--Icon-fontSize)" />
-                    </Avatar>
-                  }
-                  title="Security"
-                />
-                <CardContent>
-                  <NationalitiesTable nationalities={[]} totalEmployees={nationalityReport?.totalEmployees || 0} />
                 </CardContent>
               </Card>
             </Stack>

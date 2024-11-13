@@ -74,7 +74,7 @@ function EntityForm({ openDialog, setNationalityReport }: EntityFormProps): Reac
         });
 
         toast.success('Nationality report created');
-        // router.push(paths.dashboard.reports.list);
+        router.push(paths.dashboard.reports.list);
 
         // 02. Set the report
         setNationalityReport(response.data);
