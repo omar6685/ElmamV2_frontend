@@ -27,6 +27,7 @@ import jsPDF from 'jspdf';
 import { QueryClient, QueryClientProvider } from 'react-query';
 
 import { paths } from '@/paths';
+import { IGetNationalityReport } from '@/lib/api/types';
 import { dayjs } from '@/lib/dayjs';
 import type { ColumnDef } from '@/components/core/data-table';
 import { DataTable } from '@/components/core/data-table';
@@ -51,14 +52,14 @@ const calculateAllowedPercentage = (nationality: string): number => {
 
 const calculateMaxAdditionCount = (name: string, count: number, totalEmployees: number): number => {
   const allowedPercentage = calculateAllowedPercentage(name);
-  let actualPercentage = (count / totalEmployees) * 100;
-  let increment = 0;
 
-  while (actualPercentage <= allowedPercentage) {
-    increment += 1;
-    actualPercentage = ((count + increment) / (totalEmployees + increment)) * 100;
-  }
-  return Number(Math.max(0, increment - 1).toFixed(2));
+  // Calculate the exact target count needed to reach the allowed percentage
+  const targetCount = (allowedPercentage / 100) * totalEmployees;
+
+  // Calculate the difference, which tells us how much to add or remove
+  const requiredAdjustment = Math.round(targetCount - count);
+
+  return requiredAdjustment;
 };
 
 // PDF generation function
@@ -89,30 +90,68 @@ interface Nationality {
 interface NationalitiesTableProps {
   nationalities: Nationality[];
   totalEmployees: number;
+  reportId: string;
 }
 
-export function NationalitiesTable({ nationalities, totalEmployees }: NationalitiesTableProps): React.JSX.Element {
-  const [nationalityData, setNationalityData] = React.useState<Nationality[]>(
-    nationalities.map((nat) => ({
-      ...nat,
-      maxAdditionCount: calculateMaxAdditionCount(nat.name, nat.count, totalEmployees),
+const extractNationalities = (nationalityReport: IGetNationalityReport): Nationality[] => {
+  return nationalityReport.result.split('|').map((entry) => {
+    const [name, countStr, percentageStr] = entry.split(',').filter(Boolean);
+    return {
+      name,
+      count: parseInt(countStr, 10),
+      percentage: parseFloat(percentageStr),
+      maxAdditionCount: calculateMaxAdditionCount(name, parseInt(countStr, 10), nationalityReport?.totalEmployees || 0),
+      maxAdditionPercentage: calculateAllowedPercentage(name),
       requiredNumberToAdd: 0,
-    }))
-  );
+    };
+  });
+};
+
+export function NationalitiesTable({
+  nationalities,
+  totalEmployees,
+  reportId,
+}: NationalitiesTableProps): React.JSX.Element {
+  const { isLoading, data: originalReport } = useGetNationalityReport({ id: reportId });
+
+  const totalOriginalEmployees = originalReport?.totalEmployees || 0;
+  const originalNationalities = originalReport ? extractNationalities(originalReport) : [];
+
+  const [nationalityData, setNationalityData] = React.useState<Nationality[]>(originalNationalities);
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   const handleRequiredNumberChange = (index: number, value: number) => {
-    if (value <= 0) return;
+    if (value < 0) return;
+
     setNationalityData((prevData) =>
-      prevData.map((nat, i) =>
-        i === index
-          ? {
-              ...nat,
-              requiredNumberToAdd: value,
-              maxAdditionCount: calculateMaxAdditionCount(nat.name, nat.count + value, totalEmployees),
-              maxAdditionPercentage: Number((((nat.count + value) / (totalEmployees + value)) * 100).toFixed(2)),
-            }
-          : nat
-      )
+      prevData.map((nat, i) => {
+        if (i === index) {
+          const originalNat = originalNationalities[i];
+          const updatedCount = originalNat.count + value;
+          const updatedPercentage = Number(((updatedCount / (totalOriginalEmployees + value)) * 100).toFixed(2));
+          const updatedMaxAdditionCount = calculateMaxAdditionCount(
+            originalNat.name,
+            updatedCount,
+            totalOriginalEmployees
+          );
+
+          return {
+            ...nat,
+            count: updatedCount,
+            percentage: updatedPercentage,
+            maxAdditionCount: updatedMaxAdditionCount,
+            requiredNumberToAdd: value,
+          };
+        }
+        return nat; // Return unchanged data for other rows
+      })
     );
   };
 
@@ -121,7 +160,7 @@ export function NationalitiesTable({ nationalities, totalEmployees }: Nationalit
       <CardHeader
         avatar={
           <Avatar>
-            <Flag fontSize="var(--Icon-fontSize)" />
+            <Flag fontSize="inherit" />
           </Avatar>
         }
         title="Nationalities Overview"
@@ -134,7 +173,7 @@ export function NationalitiesTable({ nationalities, totalEmployees }: Nationalit
                 columns={[
                   {
                     name: 'Nationality',
-                    formatter: (row): React.JSX.Element => (
+                    formatter: (row) => (
                       <Typography sx={{ whiteSpace: 'nowrap' }} variant="inherit">
                         {row.name}
                       </Typography>
@@ -142,7 +181,7 @@ export function NationalitiesTable({ nationalities, totalEmployees }: Nationalit
                   },
                   {
                     name: 'Count',
-                    formatter: (row): React.JSX.Element => (
+                    formatter: (row) => (
                       <Typography sx={{ whiteSpace: 'nowrap' }} variant="inherit">
                         {row.count}
                       </Typography>
@@ -150,7 +189,7 @@ export function NationalitiesTable({ nationalities, totalEmployees }: Nationalit
                   },
                   {
                     name: 'Percentage',
-                    formatter: (row): React.JSX.Element => (
+                    formatter: (row) => (
                       <Typography sx={{ whiteSpace: 'nowrap' }} variant="inherit">
                         {row.percentage}%
                       </Typography>
@@ -158,15 +197,21 @@ export function NationalitiesTable({ nationalities, totalEmployees }: Nationalit
                   },
                   {
                     name: 'Max Addition',
-                    formatter: (row): React.JSX.Element => (
-                      <Typography sx={{ whiteSpace: 'nowrap' }} variant="inherit">
+                    formatter: (row) => (
+                      <Typography
+                        sx={{
+                          whiteSpace: 'nowrap',
+                          color: row.maxAdditionCount < 0 ? 'red' : 'inherit',
+                        }}
+                        variant="inherit"
+                      >
                         {row.maxAdditionCount}
                       </Typography>
                     ),
                   },
                   {
                     name: 'Max Addition Percentage',
-                    formatter: (row): React.JSX.Element => (
+                    formatter: (row) => (
                       <Typography sx={{ whiteSpace: 'nowrap' }} variant="inherit">
                         {row.maxAdditionPercentage}%
                       </Typography>
@@ -174,11 +219,11 @@ export function NationalitiesTable({ nationalities, totalEmployees }: Nationalit
                   },
                   {
                     name: 'Required Number to Add',
-                    formatter: (row, index): React.JSX.Element => (
+                    formatter: (row, index) => (
                       <OutlinedInput
                         type="number"
                         value={row.requiredNumberToAdd}
-                        onChange={(e) => handleRequiredNumberChange(index, parseInt(e.target.value))}
+                        onChange={(e) => handleRequiredNumberChange(index, Number(e.target.value))}
                       />
                     ),
                   },
@@ -206,26 +251,6 @@ function SingleReport({ params }: { params: { reportId: string } }): React.JSX.E
   const calculateSaudisPercentage = () => {
     if (!nationalityReport) return 0;
     return parseInt((((nationalityReport.saudis || 0) / (nationalityReport.totalEmployees || 0)) * 100).toString(), 10);
-  };
-
-  // create a function to extract the nationalities from the report result field
-  // ex: result: "هندي,31,48.44%|فلبيني,1,1.56%|نيبالي,7,10.94%|باكستاني,4,6.25%|مصرى,5,7.81%|يمني,15,23.44%|سوداني,1,1.56%"
-  const extractNationalities = (result: string): Nationality[] => {
-    return result.split('|').map((entry) => {
-      const [name, countStr, percentageStr] = entry.split(',').filter(Boolean);
-      return {
-        name,
-        count: parseInt(countStr, 10),
-        percentage: parseFloat(percentageStr),
-        maxAdditionCount: calculateMaxAdditionCount(
-          name,
-          parseInt(countStr, 10),
-          nationalityReport?.totalEmployees || 0
-        ),
-        maxAdditionPercentage: calculateAllowedPercentage(name),
-        requiredNumberToAdd: 0,
-      };
-    });
   };
 
   if (isLoading) {
@@ -328,7 +353,8 @@ function SingleReport({ params }: { params: { reportId: string } }): React.JSX.E
                               variant="determinate"
                             />
                             <Typography color="text.secondary" variant="body2">
-                              {calculateSaudisPercentage() > 100 ? 100 : calculateSaudisPercentage()}%
+                              {calculateSaudisPercentage() > 100 ? 100 : calculateSaudisPercentage()}% (
+                              {nationalityReport?.saudis} out of {nationalityReport?.totalEmployees})
                             </Typography>
                           </Stack>
                         ),
@@ -343,8 +369,9 @@ function SingleReport({ params }: { params: { reportId: string } }): React.JSX.E
               </Card>
 
               <NationalitiesTable
-                nationalities={extractNationalities(nationalityReport?.result || '')}
+                nationalities={extractNationalities(nationalityReport as IGetNationalityReport)}
                 totalEmployees={nationalityReport?.totalEmployees || 0}
+                reportId={nationalityReport?.id || ''}
               />
 
               <Card>
