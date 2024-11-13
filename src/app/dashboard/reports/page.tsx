@@ -11,65 +11,51 @@ import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 
 import { config } from '@/config';
 import { paths } from '@/paths';
+import { IGetNationalityReport } from '@/lib/api/types';
 import { dayjs } from '@/lib/dayjs';
 import { ReportsFilters } from '@/components/dashboard/reports/reports-filters';
 import type { Filters } from '@/components/dashboard/reports/reports-filters';
 import { ReportsPagination } from '@/components/dashboard/reports/reports-pagination';
 import { ReportsSelectionProvider } from '@/components/dashboard/reports/reports-selection-context';
-import { Report, ReportsTable } from '@/components/dashboard/reports/reports-table';
 
 export const metadata = { title: `List | Reports | Dashboard | ${config.site.name}` } satisfies Metadata;
 
 const reports = [
   {
-    id: 'USR-005',
-    name: 'Fran Perez',
-    avatar: '/assets/avatar-5.png',
-    email: 'fran.perez@domain.com',
-    phone: '(815) 704-0045',
-    quota: 50,
-    status: 'active',
-    createdAt: dayjs().subtract(1, 'hour').toDate(),
+    id: '3',
+    result: 'هندي,31,48.44%,فلبيني,1,1.56%,نيبالي,7,10.94%,باكستاني,4,6.25%,مصرى,5,7.81%,يمني,15,23.44%,سوداني,1,1.56%',
+    saudis: 8,
+    totalEmployees: 72,
+    maxAddition: '{"هندي":0,"فلبيني":6,"نيبالي":0,"باكستاني":3,"مصرى":2,"سعودي":19,"يمني":0,"سوداني":6}',
+    name: 'Report-1731342653822',
+    userId: '3',
+    createdAt: '2024-11-11T15:30:53.822Z',
+    updatedAt: '2024-11-11T15:30:53.822Z',
+    entityId: '13',
   },
   {
-    id: 'USR-004',
-    name: 'Penjani Inyene',
-    avatar: '/assets/avatar-4.png',
-    email: 'penjani.inyene@domain.com',
-    phone: '(803) 937-8925',
-    quota: 100,
-    status: 'active',
-    createdAt: dayjs().subtract(3, 'hour').toDate(),
+    id: '4',
+    result: 'هندي,31,48.44%,فلبيني,1,1.56%,نيبالي,7,10.94%,باكستاني,4,6.25%,مصرى,5,7.81%,يمني,15,23.44%,سوداني,1,1.56%',
+    saudis: 8,
+    totalEmployees: 72,
+    maxAddition: '{"هندي":0,"فلبيني":6,"نيبالي":0,"باكستاني":3,"مصرى":2,"سعودي":19,"يمني":0,"سوداني":6}',
+    name: 'Report-1731342914985',
+    userId: '3',
+    createdAt: '2024-11-11T15:35:14.985Z',
+    updatedAt: '2024-11-11T15:35:14.985Z',
+    entityId: '13',
   },
   {
-    id: 'USR-003',
-    name: 'Carson Darrin',
-    avatar: '/assets/avatar-3.png',
-    email: 'carson.darrin@domain.com',
-    phone: '(715) 278-5041',
-    quota: 10,
-    status: 'blocked',
-    createdAt: dayjs().subtract(1, 'hour').subtract(1, 'day').toDate(),
-  },
-  {
-    id: 'USR-002',
-    name: 'Siegbert Gottfried',
-    avatar: '/assets/avatar-2.png',
-    email: 'siegbert.gottfried@domain.com',
-    phone: '(603) 766-0431',
-    quota: 0,
-    status: 'pending',
-    createdAt: dayjs().subtract(7, 'hour').subtract(1, 'day').toDate(),
-  },
-  {
-    id: 'USR-001',
-    name: 'Miron Vitold',
-    avatar: '/assets/avatar-1.png',
-    email: 'miron.vitold@domain.com',
-    phone: '(425) 434-5535',
-    quota: 50,
-    status: 'active',
-    createdAt: dayjs().subtract(2, 'hour').subtract(2, 'day').toDate(),
+    id: '5',
+    result: 'هندي,31,48.44%,فلبيني,1,1.56%,نيبالي,7,10.94%,باكستاني,4,6.25%,مصرى,5,7.81%,يمني,15,23.44%,سوداني,1,1.56%',
+    saudis: 8,
+    totalEmployees: 72,
+    maxAddition: '{"هندي":0,"فلبيني":6,"نيبالي":0,"باكستاني":3,"مصرى":2,"سعودي":19,"يمني":0,"سوداني":6}',
+    name: 'Report-1731344006106',
+    userId: '3',
+    createdAt: '2024-11-11T15:53:26.108Z',
+    updatedAt: '2024-11-11T15:53:26.108Z',
+    entityId: '13',
   },
 ];
 
@@ -80,7 +66,7 @@ interface PageProps {
 export default function Page({ searchParams }: PageProps): React.JSX.Element {
   const { email, phone, sortDir, status } = searchParams;
 
-  const sortedReports = applySort(reports as Report[], sortDir);
+  const sortedReports = applySort(reports as IGetNationalityReport[], sortDir);
   const filteredReports = applyFilters(sortedReports, { email, phone, status });
 
   return (
@@ -109,9 +95,7 @@ export default function Page({ searchParams }: PageProps): React.JSX.Element {
           <Card>
             <ReportsFilters filters={{ email, phone, status }} sortDir={sortDir} />
             <Divider />
-            <Box sx={{ overflowX: 'auto' }}>
-              <ReportsTable rows={filteredReports} />
-            </Box>
+            <Box sx={{ overflowX: 'auto' }}>{/* <ReportsTable rows={filteredReports} /> */}</Box>
             <Divider />
             <ReportsPagination count={filteredReports.length + 100} page={0} />
           </Card>
@@ -123,35 +107,35 @@ export default function Page({ searchParams }: PageProps): React.JSX.Element {
 
 // Sorting and filtering has to be done on the server.
 
-function applySort(row: Report[], sortDir: 'asc' | 'desc' | undefined): Report[] {
+function applySort(row: IGetNationalityReport[], sortDir: 'asc' | 'desc' | undefined): IGetNationalityReport[] {
   return row.sort((a, b) => {
     if (sortDir === 'asc') {
-      return a.createdAt.getTime() - b.createdAt.getTime();
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
     }
 
-    return b.createdAt.getTime() - a.createdAt.getTime();
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 }
 
-function applyFilters(row: Report[], { email, phone, status }: Filters): Report[] {
+function applyFilters(row: IGetNationalityReport[], { email, phone, status }: Filters): IGetNationalityReport[] {
   return row.filter((item) => {
-    if (email) {
-      if (!item.email?.toLowerCase().includes(email.toLowerCase())) {
-        return false;
-      }
-    }
+    // if (email) {
+    //   if (!item.email?.toLowerCase().includes(email.toLowerCase())) {
+    //     return false;
+    //   }
+    // }
 
-    if (phone) {
-      if (!item.phone?.toLowerCase().includes(phone.toLowerCase())) {
-        return false;
-      }
-    }
+    // if (phone) {
+    //   if (!item.phone?.toLowerCase().includes(phone.toLowerCase())) {
+    //     return false;
+    //   }
+    // }
 
-    if (status) {
-      if (item.status !== status) {
-        return false;
-      }
-    }
+    // if (status) {
+    //   if (item.status !== status) {
+    //     return false;
+    //   }
+    // }
 
     return true;
   });

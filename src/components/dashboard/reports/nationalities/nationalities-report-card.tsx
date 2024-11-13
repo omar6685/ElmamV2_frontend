@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, Dialog } from '@mui/material';
+import { Box, Button, CircularProgress, Dialog } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -11,24 +11,39 @@ import { Printer } from '@phosphor-icons/react';
 import { Flag as FlagIcon } from '@phosphor-icons/react/dist/ssr/Flag';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
+import Link from '@mui/material/Link';
+import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
+import { ShoppingCartSimple as ShoppingCartSimpleIcon } from '@phosphor-icons/react/dist/ssr/ShoppingCartSimple';
+
+import { dayjs } from '@/lib/dayjs';
+import type { ColumnDef } from '@/components/core/data-table';
+import { DataTable } from '@/components/core/data-table';
+import { ICreateNationalityReport } from '@/lib/api/types';
+
+
+
 
 export interface NationalitiesReportCardProps {
   onClose: () => void;
   open: boolean;
-  report: {
-    name: string | null;
-    result: string | null;
-    saudis: number | null;
-    totalEmployees: number | null;
-  };
+  report: ICreateNationalityReport | null;
 }
 
 export function NationalitiesReportCard({ report, onClose, open }: NationalitiesReportCardProps): React.JSX.Element {
+  if (!report)
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+        <CircularProgress />
+      </Box>
+    );
+
   const { name, result, saudis = 0, totalEmployees = 0 } = report;
 
   const nationalities = result
-    ? result.split(',').map((entry) => {
-        const [name, countStr, percentageStr] = entry.split(' ').filter(Boolean);
+    ? result.split('|').map((entry) => {
+        const [name, countStr, percentageStr] = entry.split(',').filter(Boolean);
         return {
           name,
           count: parseInt(countStr, 10),
@@ -49,7 +64,7 @@ export function NationalitiesReportCard({ report, onClose, open }: Nationalities
       const width = pdf.internal.pageSize.getWidth();
       const height = (canvas.height * width) / canvas.width;
       pdf.addImage(imgData, 'JPEG', 0, 0, width, height);
-      pdf.save('nationality-report.pdf');
+      pdf.save(report.name + '.pdf');
     }
   };
 
