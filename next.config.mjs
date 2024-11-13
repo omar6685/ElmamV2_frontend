@@ -3,9 +3,9 @@ const config = {
   experimental: {
     esmExternals: 'loose',
   },
-  eslint:{
+  eslint: {
     ignoreDuringBuilds: true,
-  }
+  },
 };
 
 export default config;
