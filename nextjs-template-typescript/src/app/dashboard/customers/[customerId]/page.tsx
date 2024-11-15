@@ -30,10 +30,10 @@ import { paths } from '@/paths';
 import { dayjs } from '@/lib/dayjs';
 import { PropertyItem } from '@/components/core/property-item';
 import { PropertyList } from '@/components/core/property-list';
-import { Notifications } from '@/components/dashboard/reports/notifications';
-import { Payments } from '@/components/dashboard/reports/payments';
-import type { Address } from '@/components/dashboard/reports/shipping-address';
-import { ShippingAddress } from '@/components/dashboard/reports/shipping-address';
+import { Notifications } from '@/components/dashboard/customer/notifications';
+import { Payments } from '@/components/dashboard/customer/payments';
+import type { Address } from '@/components/dashboard/customer/shipping-address';
+import { ShippingAddress } from '@/components/dashboard/customer/shipping-address';
 
 export const metadata = { title: `Details | Customers | Dashboard | ${config.site.name}` } satisfies Metadata;
 

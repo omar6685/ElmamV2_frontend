@@ -16,13 +16,13 @@ import { toast } from '@/components/core/toaster';
 export type Language = 'en' | 'de' | 'es';
 
 export const languageFlags = {
-  en: '/assets/flag-uk.svg',
+  en: '/assets/flag-gb.svg',
   de: '/assets/flag-de.svg',
   es: '/assets/flag-es.svg',
 } as const;
 
 const languageOptions = {
-  en: { icon: '/assets/flag-uk.svg', label: 'English' },
+  en: { icon: '/assets/flag-gb.svg', label: 'English' },
   de: { icon: '/assets/flag-de.svg', label: 'German' },
   es: { icon: '/assets/flag-es.svg', label: 'Spanish' },
 } as const;

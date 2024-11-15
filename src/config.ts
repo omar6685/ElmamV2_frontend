@@ -30,7 +30,7 @@ export interface Config {
 export const config = {
   site: {
     name: 'Elmam',
-    description: '',
+    description: 'Elmam is a platform that helps you to manage your business.',
     language: 'en',
     themeColor: '#090a0b',
     primaryColor: 'neonBlue',

@@ -18,7 +18,13 @@ export default function ReportsList(): React.JSX.Element {
             xs: 12,
           }}
         >
-          <ReportCard icon={report.icon} title={report.name} description={report.description} soon={report.soon} />
+          <ReportCard
+            icon={report.icon}
+            title={report.name}
+            description={report.description}
+            href={report.href}
+            soon={report.soon}
+          />
         </Grid>
       ))}
     </Grid>

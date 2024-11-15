@@ -18,8 +18,8 @@ const countryFlags: Record<string, string> = {
   de: '/assets/flag-de.svg',
   es: '/assets/flag-es.svg',
   ru: '/assets/flag-ru.svg',
-  uk: '/assets/flag-uk.svg',
-  us: '/assets/flag-us.svg',
+  uk: '/assets/flag-gb.svg',
+  us: '/assets/flag-um.svg',
 };
 
 interface Visit {

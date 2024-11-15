@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Select } from '@mui/material';
@@ -19,14 +20,21 @@ import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { CloudArrowUp, Plus } from '@phosphor-icons/react';
+import { CloudArrowDown, Trash } from '@phosphor-icons/react';
 import { PlusCircle as PlusCircleIcon } from '@phosphor-icons/react/dist/ssr/PlusCircle';
+import { AxiosResponse } from 'axios';
+import { deleteObject, listAll, ref, StorageReference } from 'firebase/storage';
 import { Controller, useForm } from 'react-hook-form';
+import { QueryClient, QueryClientProvider } from 'react-query';
 import { z as zod } from 'zod';
 
 import { paths } from '@/paths';
+import apiInstance from '@/lib/api/axios';
+import { ICreateEntityResponse } from '@/lib/api/types';
+import { authClient } from '@/lib/auth/client';
 import { dayjs } from '@/lib/dayjs';
 import { logger } from '@/lib/default-logger';
+import { getFirebaseStorage } from '@/lib/storage/firebase/client';
 import { useDialog } from '@/hooks/use-dialog';
 import type { ColumnDef } from '@/components/core/data-table';
 import { DataTable } from '@/components/core/data-table';
@@ -34,9 +42,16 @@ import { Option } from '@/components/core/option';
 import { toast } from '@/components/core/toaster';
 
 import { AddCompanyDialog, Company, companySchema } from './dialogs/add-company';
+import { useActivities } from './hooks/useActivities';
 
 // You could memoize this function to avoid re-creating the columns on every render.
-function getCompaniesColumns({ onEdit }: { onEdit?: (companyId: string) => void }): ColumnDef<Company>[] {
+function getCompaniesColumns({
+  onEdit,
+  onRemove,
+}: {
+  onEdit?: (companyId: string) => void;
+  onRemove?: (companyId: string) => void;
+}): ColumnDef<Company>[] {
   return [
     {
       formatter: (row): React.JSX.Element => {
@@ -59,7 +74,7 @@ function getCompaniesColumns({ onEdit }: { onEdit?: (companyId: string) => void 
         );
       },
       name: 'Company',
-      width: '220px',
+      width: '200px',
     },
     {
       formatter: (row): React.JSX.Element => (
@@ -68,40 +83,40 @@ function getCompaniesColumns({ onEdit }: { onEdit?: (companyId: string) => void 
         </Stack>
       ),
       name: 'CRN',
-      width: '220px',
+      width: '200px',
     },
     {
       formatter: (row): React.JSX.Element => (
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-          <Button variant="outlined" startIcon={<CloudArrowUp />}>
-            Workers File
-          </Button>
+          <Link href={row.workersFile as string} target="_blank">
+            <CloudArrowDown className="h-6 w-6" />
+          </Link>
         </Stack>
       ),
       name: 'Workers File',
-      width: '220px',
+      width: '200px',
     },
     {
       formatter: (row): React.JSX.Element => (
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-          <Button variant="outlined" startIcon={<CloudArrowUp />}>
-            Subscribers List File
-          </Button>
+          <Link href={row.workersFile as string} target="_blank">
+            <CloudArrowDown className="h-6 w-6" />
+          </Link>
         </Stack>
       ),
       name: 'Subscribers List File',
-      width: '220px',
+      width: '200px',
     },
     {
       formatter: (row): React.JSX.Element => (
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-          <Button variant="outlined" startIcon={<CloudArrowUp />}>
-            Main Resident File
-          </Button>
+          <Link href={row.workersFile as string} target="_blank">
+            <CloudArrowDown className="h-6 w-6" />
+          </Link>
         </Stack>
       ),
       name: 'Main Resident File',
-      width: '220px',
+      width: '200px',
     },
     {
       formatter: (row): React.JSX.Element => (
@@ -120,7 +135,24 @@ function getCompaniesColumns({ onEdit }: { onEdit?: (companyId: string) => void 
         />
       ),
       name: 'Adaptation',
-      width: '220px',
+      width: '200px',
+    },
+    {
+      formatter: (row): React.JSX.Element => (
+        <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+          <Button
+            color="secondary"
+            variant="outlined"
+            onClick={() => {
+              onRemove?.(row.crn);
+            }}
+          >
+            <Trash />
+          </Button>
+        </Stack>
+      ),
+      name: '',
+      width: '100px',
     },
   ];
 }
@@ -242,9 +274,10 @@ const defaultValues = {
   companies: [],
 } satisfies Values;
 
-export function EntityCreateForm(): React.JSX.Element {
+function EntityForm(): React.JSX.Element {
   const router = useRouter();
   const addCompanyDialog = useDialog();
+  const { isLoading, error, data: activities, isFetching } = useActivities();
 
   const {
     control,
@@ -258,8 +291,55 @@ export function EntityCreateForm(): React.JSX.Element {
   const onSubmit = React.useCallback(
     async (values: Values): Promise<void> => {
       try {
+        const { data: user } = await authClient.getUser();
+
         // Make API request
         console.log('Entity created', values);
+        // 01. Create entity first then use it's id to create the companies
+        const response: AxiosResponse<ICreateEntityResponse> = await apiInstance.post('entities', {
+          ajier: parseInt(values.ajirContracts),
+          saudiPlayer: parseInt(values.sportsPlayer),
+          saudiJailed: parseInt(values.freedJailed),
+          saudiDisable: parseInt(values.disabled),
+          saudiOnline: parseInt(values.remoteWorker),
+          saudiStudent: parseInt(values.students),
+          foreignerLikeSaudi: parseInt(values.citizenshipExemptSaudi),
+          foreignerLikeForeigner: parseInt(values.citizenshipExempt),
+          saudiLoanPlayer: parseInt(values.lended),
+          gulfCitizen: parseInt(values.gccCitizen),
+          tribeSaudi: parseInt(values.displacedTribes),
+          specialyForeigner: parseInt(values.specialForeigner),
+          owner: parseInt(values.owner),
+          realForeigner: parseInt(values.foreignersAfterRules),
+          realSaudi: parseInt(values.saudisAfterRules),
+          commercialRegistrationNumberId: 2,
+          userId: parseInt(user?.sub as string) ?? '',
+          activityTableId: parseInt(values.activity),
+        });
+
+        // 02. Create companies
+        // endpoint: /entities/crn-entity
+        // example company body
+        const companies = values.companies.map((company) => {
+          return {
+            entityId: parseInt(response.data.id),
+            adaptation: company.adaptation,
+            logoUrl: company.image,
+            commercialRegistrationNumberId: 2,
+            xlsxFileLocal: company.workersFile,
+            subscribersXlsxFile: company.subscribersListFile,
+            residentXlsxFile: company.mainResidentFile,
+            nationalities: company.nationalities,
+          };
+        });
+
+        // Make API request to create companies
+        await Promise.all(
+          companies.map((company) => {
+            return apiInstance.post('entities/crn-entity', company);
+          })
+        );
+
         toast.success('Entity created');
         router.push(paths.dashboard.entities.list);
       } catch (err) {
@@ -273,6 +353,37 @@ export function EntityCreateForm(): React.JSX.Element {
   const handleAdd = React.useCallback(() => {
     addCompanyDialog.handleOpen();
   }, [addCompanyDialog]);
+
+  const handleRemoveFolder = React.useCallback((crn: string) => {
+    // Initialize Firebase storage
+    const storage = getFirebaseStorage();
+    const folderRef: StorageReference = ref(storage, `companies/${crn}`);
+
+    // List all files in the folder and delete them
+    listAll(folderRef)
+      .then((res: any) => {
+        // Create an array of promises to delete each item
+        const deletePromises = res.items.map((itemRef: StorageReference) => deleteObject(itemRef));
+
+        // Wait for all deletions to complete
+        Promise.all(deletePromises)
+          .then(() => {
+            toast.success('Company folder removed');
+          })
+          .catch((error) => {
+            console.log(error);
+            toast.error('Failed to delete all items in the folder');
+          });
+      })
+      .catch((error) => {
+        if (error.code === 'storage/object-not-found') {
+          toast.error('Folder does not exist');
+        } else {
+          console.log(error);
+          toast.error('Something went wrong!');
+        }
+      });
+  }, []);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -293,9 +404,11 @@ export function EntityCreateForm(): React.JSX.Element {
                     <InputLabel required>Activity</InputLabel>
                     <Select {...field}>
                       <Option value="">Choose an activity</Option>
-                      <Option value="act1">Activity 01</Option>
-                      <Option value="act2">Activity 02</Option>
-                      <Option value="act3">Activity 03</Option>
+                      {activities?.map((activity) => (
+                        <Option key={activity.id} value={activity.id}>
+                          {activity.activitiy}
+                        </Option>
+                      ))}
                     </Select>
                     {errors.activity ? <FormHelperText>{errors.activity?.message}</FormHelperText> : null}
                   </FormControl>
@@ -318,6 +431,11 @@ export function EntityCreateForm(): React.JSX.Element {
                           return company;
                         });
                         setValue('companies', updatedCompanies);
+                      },
+                      onRemove: (companyId) => {
+                        const updatedCompanies = getValues('companies').filter((company) => company.crn !== companyId);
+                        setValue('companies', updatedCompanies);
+                        handleRemoveFolder(companyId);
                       },
                     })}
                     rows={watch('companies')}
@@ -652,5 +770,15 @@ export function EntityCreateForm(): React.JSX.Element {
         />
       ) : null}
     </form>
+  );
+}
+
+const queryClient = new QueryClient();
+
+export function EntityCreateForm() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <EntityForm />
+    </QueryClientProvider>
   );
 }

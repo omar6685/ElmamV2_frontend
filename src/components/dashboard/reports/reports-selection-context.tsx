@@ -4,8 +4,7 @@ import * as React from 'react';
 
 import { useSelection } from '@/hooks/use-selection';
 import type { Selection } from '@/hooks/use-selection';
-
-import type { Report } from './reports-table';
+import { IGetNationalityReport } from '@/lib/api/types';
 
 function noop(): void {
   return undefined;
@@ -25,7 +24,7 @@ export const ReportsSelectionContext = React.createContext<ReportsSelectionConte
 
 interface ReportsSelectionProviderProps {
   children: React.ReactNode;
-  reports: Report[];
+  reports: IGetNationalityReport[];
 }
 
 export function ReportsSelectionProvider({

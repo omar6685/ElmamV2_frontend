@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { Button } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
@@ -14,12 +15,18 @@ export interface ReportCardProps {
   icon: Icon;
   title: string;
   description: string;
+  href: string;
   soon?: boolean;
 }
 
-export function ReportCard({ icon: Icon, title, description, soon }: ReportCardProps): React.JSX.Element {
+export function ReportCard({ icon: Icon, title, description, href, soon }: ReportCardProps): React.JSX.Element {
   return (
-      <Card sx={{ position: 'relative' }}>
+    <Link href={href}>
+      <Card
+        sx={{
+          position: 'relative',
+        }}
+      >
         <CardContent>
           <Stack direction="row" spacing={3} sx={{ alignItems: 'start' }}>
             {soon && (
@@ -60,5 +67,6 @@ export function ReportCard({ icon: Icon, title, description, soon }: ReportCardP
           </Stack>
         </Box>
       </Card>
+    </Link>
   );
 }

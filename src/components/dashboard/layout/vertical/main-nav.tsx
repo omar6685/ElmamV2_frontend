@@ -179,7 +179,7 @@ const user = {
   name: 'Sofia Rivers',
   avatar: '/assets/avatar.png',
   email: 'sofia@devias.io',
-} satisfies User;
+} 
 
 function UserButton(): React.JSX.Element {
   const popover = usePopover<HTMLButtonElement>();

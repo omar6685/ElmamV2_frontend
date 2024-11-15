@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LinearProgress } from '@mui/material';
+import { LinearProgress, Select } from '@mui/material';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -14,15 +14,19 @@ import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { MicrosoftExcelLogo, X as XIcon } from '@phosphor-icons/react';
+import { MicrosoftExcelLogo, Minus, X as XIcon } from '@phosphor-icons/react';
 import { Trash as TrashIcon } from '@phosphor-icons/react/dist/ssr/Trash';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { Controller, useForm } from 'react-hook-form';
+import * as XLSX from 'xlsx';
 import { z as zod } from 'zod';
 
+import apiInstance from '@/lib/api/axios';
+import { authClient } from '@/lib/auth/client';
 import { logger } from '@/lib/default-logger';
 import { getFirebaseStorage } from '@/lib/storage/firebase/client';
 import { FileDropzone } from '@/components/core/file-dropzone';
+import { Option } from '@/components/core/option';
 import { toast } from '@/components/core/toaster';
 
 export const companySchema = zod.object({
@@ -33,21 +37,52 @@ export const companySchema = zod.object({
   workersFile: zod.string().nullable(),
   subscribersListFile: zod.string().nullable(),
   mainResidentFile: zod.string().nullable(),
+  nationalities: zod
+    .array(
+      zod.object({
+        name: zod.string(),
+        count: zod.number(),
+      })
+    )
+    .nullable()
+    .default([]),
 });
 
 export type Company = zod.infer<typeof companySchema>;
+export type CrnEntity = Company;
+
+export type XLSFileRow = {
+  'رقم العامل': string;
+  'اسم العامل': string;
+  الجنسية: string;
+  'رقم المنشأة': string;
+  'إسم المنشأة': string;
+  'الإقامة - البطاقة': string;
+  المهنة: string;
+};
 
 export interface CompanyDialogProps {
   action: 'create' | 'update';
-  company?: Company;
+  company?: CrnEntity;
   onClose?: () => void;
-  onCreate?: (params: Company) => void;
+  onCreate?: (params: CrnEntity) => void;
   onDelete?: (companyId: string) => void;
-  onUpdate?: (companyId: string, params: Company) => void;
+  onUpdate?: (companyId: string, params: CrnEntity) => void;
   open?: boolean;
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+const companies = [
+  {
+    crn: '1234567890',
+    name: 'Company 1',
+  },
+  {
+    crn: '0987654321',
+    name: 'Company 2',
+  },
+];
 
 export function AddCompanyDialog({
   action = 'create',
@@ -64,11 +99,13 @@ export function AddCompanyDialog({
     reset,
     formState: { errors },
     setValue,
-  } = useForm<Company>({ defaultValues: {} as Company, resolver: zodResolver(companySchema) });
+    getValues,
+  } = useForm<CrnEntity>({ defaultValues: {} as CrnEntity, resolver: zodResolver(companySchema) });
   const [image, setImage] = React.useState<string | null>('');
   const [workersFile, setWorkersFile] = React.useState<string | null>('');
   const [subscribersListFile, setSubscribersListFile] = React.useState<string | null>('');
   const [mainResidentFile, setMainResidentFile] = React.useState<string | null>('');
+  const [nationalities, setNationalities] = React.useState<{ name: string; count: number }[]>([]);
   const [fileUploads, setFileUploads] = React.useState<
     Record<
       'image' | 'workersFile' | 'subscribersListFile' | 'mainResidentFile',
@@ -80,9 +117,9 @@ export function AddCompanyDialog({
     subscribersListFile: { file: null, progress: 0 },
     mainResidentFile: { file: null, progress: 0 },
   });
-  console.log('Errors: ', errors);
+
   const handleFileDrop = React.useCallback(
-    (
+    async (
       file: File,
       setFile: React.Dispatch<React.SetStateAction<string | null>>,
       fileType: 'image' | 'workersFile' | 'subscribersListFile' | 'mainResidentFile'
@@ -96,14 +133,16 @@ export function AddCompanyDialog({
         reader.readAsDataURL(file);
         reader.onload = (event) => {
           setFile(reader.result as string);
-          setValue(fileType, reader.result as string);
         };
-        reader.readAsDataURL(file);
       } else {
+        // generate ntionalities report if workers file is uploaded
+        if (fileType === 'workersFile') await parseWorkersFile(file);
+
         console.log(file.name);
         setFile(file.name);
-        setValue(fileType, file.name);
       }
+      console.log(fileType, file.name);
+      setValue(fileType, file.name);
       setFileUploads((prevUploads) => ({ ...prevUploads, [fileType]: { file, progress: 0 } }));
     },
     []
@@ -113,7 +152,7 @@ export function AddCompanyDialog({
     console.log(`uploading file ${file.name} of type ${fileType} to firebase storage`);
     const storage = getFirebaseStorage();
     return new Promise((resolve, reject) => {
-      const storageRef = ref(storage, `companies/${fileType}/${file.name}`);
+      const storageRef = ref(storage, `companies/${getValues().crn}/${fileType}/${file.name}`);
       const uploadTask = uploadBytesResumable(storageRef, file);
 
       uploadTask.on(
@@ -136,55 +175,101 @@ export function AddCompanyDialog({
     });
   };
 
+  const parseWorkersFile = async (file: File) => {
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array' });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      const rows = XLSX.utils.sheet_to_json<XLSFileRow>(worksheet);
+      console.log('Rows:', rows);
+
+      // Use a Map to efficiently count each nationality
+      const nationalityCount = rows.reduce((acc, row) => {
+        const nationality = row['الجنسية'];
+        acc.set(nationality, (acc.get(nationality) || 0) + 1);
+        return acc;
+      }, new Map<string, number>());
+
+      const uniqueNationalities = Array.from(nationalityCount, ([name, count]) => ({ name, count }));
+      console.log('Unique nationalities:', uniqueNationalities);
+      setNationalities(uniqueNationalities);
+    } catch (error) {
+      console.error('Error parsing workers file:', error);
+    }
+  };
+
+  const createNationalityReport = async (data: {
+    nationalities: { name: string; count: number }[];
+    userId: number;
+    entityId: number;
+  }) => {
+    try {
+      const response = await apiInstance.post('/reports/nationality', data);
+      console.log('Report created successfully:', response.data);
+    } catch (error) {
+      console.error('Error creating nationality report:', error);
+    }
+  };
+
   const onSubmit = async (
-    values: Company
+    values: CrnEntity
     // event: React.BaseSyntheticEvent,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     // { reset }: { reset: (values?: any) => void }
   ) => {
     try {
-      console.log('Submitting form:', values);
-      // const fileUrls = await Promise.all(
-      //   Object.entries(fileUploads).map(
-      //     async ([fileType, fileData]:
-      //       | [string, { file: File | null; progress: number }]
-      //       | [string, { file: File | null; progress: number }]
-      //       | [string, { file: File | null; progress: number }]
-      //       | [string, { file: File | null; progress: number }]) => {
-      //       if (fileData.file) {
-      //         return uploadFile(
-      //           fileData.file,
-      //           fileType as 'image' | 'workersFile' | 'subscribersListFile' | 'mainResidentFile'
-      //         );
-      //       }
-      //       return null;
-      //     }
-      //   )
-      // );
+      const { data: user } = await authClient.getUser();
 
+      console.log('Submitting form:', values);
+      console.log('fileUploads:', fileUploads);
+
+      // 01. Upload files to firebase storage
+      const fileUrls = await Promise.all(
+        Object.entries(fileUploads).map(
+          async ([fileType, fileData]:
+            | [string, { file: File | null; progress: number }]
+            | [string, { file: File | null; progress: number }]
+            | [string, { file: File | null; progress: number }]
+            | [string, { file: File | null; progress: number }]) => {
+            if (fileData.file) {
+              return uploadFile(
+                fileData.file,
+                fileType as 'image' | 'workersFile' | 'subscribersListFile' | 'mainResidentFile'
+              );
+            }
+            return null;
+          }
+        )
+      );
+      console.log('File URLs:', fileUrls);
+
+      // 02. Create company object
       const params = {
         ...values,
-        // image: fileUrls[0] as string,
-        // workersFile: fileUrls[1] as string,
-        // subscribersListFile: fileUrls[2] as string,
-        // mainResidentFile: fileUrls[3] as string,
-      } satisfies Company;
+        image: fileUrls[0] as string,
+        workersFile: fileUrls[1] as string,
+        subscribersListFile: fileUrls[2] as string,
+        mainResidentFile: fileUrls[3] as string,
+        nationalities,
+      } satisfies CrnEntity;
 
       if (action === 'update' && company?.crn) {
         onUpdate?.(company.crn, params);
       } else {
+        console.log('Creating company:', params);
         onCreate?.(params);
       }
     } catch (error) {
       console.error('Error uploading files:', error);
     } finally {
-      onClose?.();
+      // onClose?.();
     }
   };
 
   React.useEffect(() => {
     // Reset form when dialog data changes
-    reset({} as Company);
+    reset({} as CrnEntity);
   }, [company, reset]);
 
   return (
@@ -198,11 +283,40 @@ export function AddCompanyDialog({
         <Stack spacing={2} sx={{ p: 3 }}>
           <Controller
             control={control}
+            name="crn"
+            render={({ field }) => (
+              <FormControl error={Boolean(errors.crn)}>
+                <InputLabel>Commercial Registration Number</InputLabel>
+                <Select
+                  onChange={(e) => {
+                    // update both the name and crn fields
+                    const selectedCompany = companies.find((company) => company.crn === e.target.value);
+                    if (selectedCompany?.crn) {
+                      setValue('name', selectedCompany?.name);
+                      setValue('crn', selectedCompany?.crn);
+                    }
+                  }}
+                >
+                  <Option value="">Choose a company</Option>
+                  {companies?.map((company) => (
+                    <Option key={company.crn} value={company.crn}>
+                      {company.name} <Minus className="mx-1" />{' '}
+                      <span className="text-sm text-gray-500">{company.crn}</span>
+                    </Option>
+                  ))}
+                </Select>
+                {errors.crn ? <FormHelperText>{errors.crn.message}</FormHelperText> : null}
+              </FormControl>
+            )}
+          />
+          {/* <Controller
+            control={control}
+            disabled
             name="name"
             render={({ field }) => (
               <FormControl error={Boolean(errors.name)}>
                 <InputLabel>Name</InputLabel>
-                <OutlinedInput {...field} />
+                <OutlinedInput {...field} disabled />
                 {errors.name ? <FormHelperText>{errors.name.message}</FormHelperText> : null}
               </FormControl>
             )}
@@ -210,14 +324,15 @@ export function AddCompanyDialog({
           <Controller
             control={control}
             name="crn"
+            disabled
             render={({ field }) => (
               <FormControl error={Boolean(errors.crn)}>
                 <InputLabel>CRN</InputLabel>
-                <OutlinedInput {...field} />
+                <OutlinedInput {...field} disabled />
                 {errors.crn ? <FormHelperText>{errors.crn.message}</FormHelperText> : null}
               </FormControl>
             )}
-          />
+          /> */}
           <Controller
             control={control}
             name="image"

@@ -1,6 +1,7 @@
 'use client';
 
 import { AxiosResponse } from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
 import type { User } from '@/types/user';
 import apiInstance from '@/lib/api/axios';
@@ -11,14 +12,6 @@ function generateToken(): string {
   window.crypto.getRandomValues(arr);
   return Array.from(arr, (v) => v.toString(16).padStart(2, '0')).join('');
 }
-
-const user = {
-  id: 'USR-000',
-  avatar: '/assets/avatar.png',
-  firstName: 'Sofia',
-  lastName: 'Rivers',
-  email: 'sofia@devias.io',
-} satisfies User;
 
 export interface SignUpParams {
   firstName: string;
@@ -43,6 +36,9 @@ export interface ResetPasswordParams {
 
 class AuthClient {
   async signUp(params: SignUpParams): Promise<{ error?: string }> {
+    // Remove the old token if it exists
+    localStorage.removeItem('auth-token');
+
     const { firstName, lastName, email, phone, password } = params;
 
     // Make API request
@@ -66,9 +62,11 @@ class AuthClient {
 
         return {};
       } else {
+        console.log(response);
         return { error: 'Invalid credentials' };
       }
     } catch (error) {
+      console.log(error);
       return { error: 'Invalid credentials' };
     }
   }
@@ -78,6 +76,9 @@ class AuthClient {
   }
 
   async signInWithPassword(params: SignInWithPasswordParams): Promise<{ error?: string }> {
+    // Remove the old token if it exists
+    localStorage.removeItem('auth-token');
+
     const { email, password } = params;
 
     // Make API request
@@ -117,8 +118,6 @@ class AuthClient {
   }
 
   async getUser(): Promise<{ data?: User | null; error?: string }> {
-    // Make API request
-
     // We do not handle the API, so just check if we have a token in localStorage.
     const token = localStorage.getItem('auth-token');
 
@@ -126,7 +125,8 @@ class AuthClient {
       return { data: null };
     }
 
-    return { data: user };
+    const decodedToken = jwtDecode(token) as User;
+    return { data: decodedToken };
   }
 
   async signOut(): Promise<{ error?: string }> {
