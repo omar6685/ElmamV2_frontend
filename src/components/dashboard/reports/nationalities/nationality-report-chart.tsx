@@ -258,7 +258,7 @@ function YTick({ height, payload, width, x, y }: YTickProps): React.JSX.Element 
           </Typography>
         </Stack>
 
-        <Typography
+        {/* <Typography
           noWrap
           variant="body2"
           sx={{
@@ -269,7 +269,7 @@ function YTick({ height, payload, width, x, y }: YTickProps): React.JSX.Element 
           }}
         >
           {Number(payload?.maxAdditionCount) < 0 ? 0 : payload?.maxAdditionCount}
-        </Typography>
+        </Typography> */}
       </Stack>
     </foreignObject>
   );
