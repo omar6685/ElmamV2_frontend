@@ -30,7 +30,7 @@ const bars = [
 interface NationalityReportChartProps {
   reportId: string;
 }
-const CHART_HEIGHT = 500;
+const CHART_HEIGHT = 550;
 
 export function NationalityReportChart({ reportId }: NationalityReportChartProps): React.JSX.Element {
   const { isLoading, data: originalReport, error } = useGetNationalityReport({ id: reportId });
@@ -131,7 +131,7 @@ export function NationalityReportChart({ reportId }: NationalityReportChartProps
                     barGap={10}
                     data={chartData}
                     layout="vertical"
-                    margin={{ top: 0, right: 0, bottom: 0, left: 200 }}
+                    margin={{ top: 20, right: 0, bottom: 0, left: 200 }}
                   >
                     <CartesianGrid horizontal={false} strokeDasharray="2 4" syncWithTicks />
                     <XAxis axisLine={false} tickLine={false} type="number" tick={<XTick />} />
