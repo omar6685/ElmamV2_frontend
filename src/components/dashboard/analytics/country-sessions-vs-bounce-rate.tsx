@@ -21,8 +21,8 @@ const countries = {
   ca: { name: 'Canada', flag: '/assets/flag-ca.svg' },
   de: { name: 'Germany', flag: '/assets/flag-de.svg' },
   ru: { name: 'Russia', flag: '/assets/flag-ru.svg' },
-  uk: { name: 'United Kingdom', flag: '/assets/flag-uk.svg' },
-  us: { name: 'United States', flag: '/assets/flag-us.svg' },
+  uk: { name: 'United Kingdom', flag: '/assets/flag-gb.svg' },
+  us: { name: 'United States', flag: '/assets/flag-um.svg' },
 } as const;
 
 const bars = [

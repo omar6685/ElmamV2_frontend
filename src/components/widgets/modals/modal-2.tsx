@@ -9,7 +9,7 @@ import Typography from '@mui/material/Typography';
 type Language = 'en' | 'de' | 'es';
 
 const languageOptions = {
-  en: { icon: '/assets/flag-uk.svg', label: 'English' },
+  en: { icon: '/assets/flag-gb.svg', label: 'English' },
   de: { icon: '/assets/flag-de.svg', label: 'German' },
   es: { icon: '/assets/flag-es.svg', label: 'Spanish' },
 } as const;

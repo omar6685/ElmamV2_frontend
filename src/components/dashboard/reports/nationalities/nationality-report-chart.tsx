@@ -62,6 +62,7 @@ export function NationalityReportChart({ reportId }: NationalityReportChartProps
       maxAddPercentage: Number(nat.maxAdditionPercentage), // Max allowed percentage
       count: nat.count,
       maxAdditionCount: Number(nat.maxAdditionCount),
+      requiredNumberToAdd: nat.requiredNumberToAdd,
     }));
   }, [nationalityData]);
 
@@ -115,7 +116,7 @@ export function NationalityReportChart({ reportId }: NationalityReportChartProps
         }
         title="Nationalities Overview (Chart View)"
       />
-      <CardContent>
+      <CardContent className="relative">
         <Grid container spacing={4}>
           <Grid
             size={{
@@ -125,7 +126,7 @@ export function NationalityReportChart({ reportId }: NationalityReportChartProps
           >
             <Stack divider={<Divider />} spacing={3}>
               <NoSsr fallback={<Box sx={{ height: `${CHART_HEIGHT}px` }} />}>
-                <ResponsiveContainer height={CHART_HEIGHT}>
+                <ResponsiveContainer height={CHART_HEIGHT} className="mt-10">
                   <BarChart
                     barGap={10}
                     data={chartData}
@@ -178,6 +179,7 @@ export function NationalityReportChart({ reportId }: NationalityReportChartProps
               xs: 12,
             }}
             sx={{
+              mt: 5,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'between',
@@ -192,53 +194,41 @@ export function NationalityReportChart({ reportId }: NationalityReportChartProps
                 alignItems: 'center',
                 justifyContent: 'between',
                 flexDirection: 'column',
-                gap: '23px',
               }}
             >
-              {nationalityData.map((nat, index) => (
-                <Stack direction="row" key={nat.name} spacing={2} alignItems="center">
-                  <Typography variant="body2">Require number to add</Typography>
+              <Stack
+                direction="row"
+                alignItems="center"
+                spacing={2}
+                sx={{
+                  width: '100%',
+                }}
+              >
+                <Typography variant="body2" align="left">
+                  Require number to add
+                </Typography>
+                <Typography variant="body2" align="left">
+                  Max addition
+                </Typography>
+              </Stack>
+              {chartData.map((nat, index) => (
+                <Stack direction="row" key={nat.name} spacing={2} alignItems="center" className="mb-[14px]">
+                  {/* <Typography variant="body2">Require number to add</Typography> */}
                   <OutlinedInput
                     type="number"
                     value={nat.requiredNumberToAdd || 0}
                     onChange={(e) => handleRequiredNumberChange(index, Number(e.target.value))}
                   />
+                  <OutlinedInput
+                    type="number"
+                    // display maxAddition count
+                    value={nat.maxAdditionCount < 0 ? 0 : nat.maxAdditionCount}
+                    disabled
+                  />
                 </Stack>
               ))}
             </Stack>
           </Grid>
-
-          {/* <Grid
-            size={{
-              md: 3,
-              xs: 12,
-            }}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'between',
-              flexDirection: 'column',
-              height: '100%',
-            }}
-          >
-            <Stack
-              spacing={2}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'between',
-                flexDirection: 'column',
-                gap: '23px',
-              }}
-            >
-              {chartData.map((nationality, index) => (
-                <Stack direction="row" key={index} spacing={2} sx={{}}>
-                  <Typography variant="body2">Require number to add</Typography>
-                  <OutlinedInput type="number" value={1} onChange={(e) => console.log(e.target.value)} />
-                </Stack>
-              ))}
-            </Stack>
-          </Grid> */}
         </Grid>
       </CardContent>
     </Card>
@@ -255,9 +245,9 @@ interface YTickProps {
 
 function YTick({ height, payload, width, x, y }: YTickProps): React.JSX.Element {
   const { nameAr, flag } = countries[payload?.value as keyof typeof countries] ?? { name: 'Unknown', flag: '' };
-
+  console.log(nameAr, flag);
   return (
-    <foreignObject height={width} width={height} x={(x ?? 0) - 270} y={(y ?? 0) - 13}>
+    <foreignObject height={width} width={height} x={(x ?? 0) - 240} y={(y ?? 0) - 13}>
       <Stack direction="row" spacing={3} sx={{ alignItems: 'center' }}>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Box sx={{ height: '1rem', width: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -278,7 +268,7 @@ function YTick({ height, payload, width, x, y }: YTickProps): React.JSX.Element 
                 : 'var(--mui-palette-text-main)',
           }}
         >
-          Max Addition: {Number(payload?.maxAdditionCount) < 0 ? 0 : payload?.maxAdditionCount}
+          {Number(payload?.maxAdditionCount) < 0 ? 0 : payload?.maxAdditionCount}
         </Typography>
       </Stack>
     </foreignObject>

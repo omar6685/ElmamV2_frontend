@@ -3,7 +3,7 @@ export const countries = {
   ألماني: { name: 'German', nameAr: 'ألماني', flag: '/assets/flag-de.svg' },
   روسي: { name: 'Russian', nameAr: 'روسي', flag: '/assets/flag-ru.svg' },
   بريطاني: { name: 'British', nameAr: 'بريطاني', flag: '/assets/flag-gb.svg' },
-  أمريكي: { name: 'American', nameAr: 'أمريكي', flag: '/assets/flag-us.svg' },
+  أمريكي: { name: 'American', nameAr: 'أمريكي', flag: '/assets/flag-um.svg' },
   سوداني: { name: 'Sudanese', nameAr: 'سوداني', flag: '/assets/flag-sd.svg' },
   يمني: { name: 'Yemeni', nameAr: 'يمني', flag: '/assets/flag-ye.svg' },
   مصري: { name: 'Egyptian', nameAr: 'مصري', flag: '/assets/flag-eg.svg' },
