@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import RouterLink from 'next/link';
-import { CircularProgress, OutlinedInput } from '@mui/material';
+import { CircularProgress } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -17,236 +17,22 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { Flag, Minus, Plus, Printer } from '@phosphor-icons/react';
+import { Minus, Printer } from '@phosphor-icons/react';
 import { ArrowLeft as ArrowLeftIcon } from '@phosphor-icons/react/dist/ssr/ArrowLeft';
 import { Folder as FolderIcon } from '@phosphor-icons/react/dist/ssr/Folder';
 import { Info as InfoIcon } from '@phosphor-icons/react/dist/ssr/Info';
 import { PencilSimple as PencilSimpleIcon } from '@phosphor-icons/react/dist/ssr/PencilSimple';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import { QueryClient, QueryClientProvider } from 'react-query';
 
 import { paths } from '@/paths';
-import { IGetNationalityReport } from '@/lib/api/types';
 import { dayjs } from '@/lib/dayjs';
-import type { ColumnDef } from '@/components/core/data-table';
-import { DataTable } from '@/components/core/data-table';
 import { PropertyItem } from '@/components/core/property-item';
 import { PropertyList } from '@/components/core/property-list';
 
 import { useGetNationalityReport } from './hooks/useGetNationalityReport';
-
-// Utility functions
-const calculateAllowedPercentage = (nationality: string): number => {
-  switch (nationality) {
-    case 'سعودي':
-      return 100.0;
-    case 'يمني':
-      return 25.0;
-    case 'أثيوبي':
-      return 1.0;
-    default:
-      return 40.0;
-  }
-};
-
-const calculateMaxAdditionCount = (name: string, count: number, totalEmployees: number): number => {
-  const allowedPercentage = calculateAllowedPercentage(name);
-
-  // Calculate the exact target count needed to reach the allowed percentage
-  const targetCount = (allowedPercentage / 100) * totalEmployees;
-
-  // Calculate the difference, which tells us how much to add or remove
-  const requiredAdjustment = Math.round(targetCount - count);
-
-  return requiredAdjustment;
-};
-
-// PDF generation function
-const generatePDF = async (reportName: string) => {
-  const element = document.getElementById('nationality-report-card');
-  if (element) {
-    const canvas = await html2canvas(element, { scale: 2 });
-    const imgData = canvas.toDataURL('image/jpeg', 0.7);
-    const pdf = new jsPDF('p', 'pt', 'a4');
-    const width = pdf.internal.pageSize.getWidth();
-    const height = (canvas.height * width) / canvas.width;
-    pdf.addImage(imgData, 'JPEG', 0, 0, width, height);
-    pdf.save(`${reportName}.pdf`);
-  }
-};
-
-// Interface for Nationality data
-interface Nationality {
-  name: string;
-  count: number;
-  percentage: number;
-  maxAdditionCount: number;
-  maxAdditionPercentage: number;
-  requiredNumberToAdd: number;
-}
-
-// Table component for Nationalities
-interface NationalitiesTableProps {
-  nationalities: Nationality[];
-  totalEmployees: number;
-  reportId: string;
-}
-
-const extractNationalities = (nationalityReport: IGetNationalityReport): Nationality[] => {
-  return nationalityReport.result.split('|').map((entry) => {
-    const [name, countStr, percentageStr] = entry.split(',').filter(Boolean);
-    return {
-      name,
-      count: parseInt(countStr, 10),
-      percentage: parseFloat(percentageStr),
-      maxAdditionCount: calculateMaxAdditionCount(name, parseInt(countStr, 10), nationalityReport?.totalEmployees || 0),
-      maxAdditionPercentage: calculateAllowedPercentage(name),
-      requiredNumberToAdd: 0,
-    };
-  });
-};
-
-export function NationalitiesTable({
-  nationalities,
-  totalEmployees,
-  reportId,
-}: NationalitiesTableProps): React.JSX.Element {
-  const { isLoading, data: originalReport } = useGetNationalityReport({ id: reportId });
-  const totalOriginalEmployees = Number(originalReport?.totalEmployees) - Number(originalReport?.saudis);
-  const originalNationalities = originalReport ? extractNationalities(originalReport) : [];
-  const [nationalityData, setNationalityData] = React.useState<Nationality[]>(originalNationalities);
-
-  React.useEffect(() => {
-    if (originalReport) {
-      setNationalityData(extractNationalities(originalReport));
-    }
-  }, [originalReport]);
-
-  if (isLoading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  const handleRequiredNumberChange = (index: number, value: number) => {
-    if (value < 0) return;
-
-    setNationalityData((prevData) => {
-      const updatedData = prevData.map((nat, i) => {
-        if (i === index) {
-          const updatedCount = originalNationalities[i].count + value;
-          return {
-            ...nat,
-            count: updatedCount,
-            requiredNumberToAdd: value,
-          };
-        }
-        return nat;
-      });
-
-      // Recalculate total employees and adjust percentages
-      const updatedTotalEmployees =
-        totalOriginalEmployees + updatedData.reduce((acc, curr) => acc + curr.requiredNumberToAdd, 0);
-      return updatedData.map((nat) => {
-        const originalNat = originalNationalities.find((on) => on.name === nat.name);
-        const updatedPercentage = Number(((nat.count / updatedTotalEmployees) * 100).toFixed(2));
-        return {
-          ...nat,
-          percentage: updatedPercentage,
-          maxAdditionCount: calculateMaxAdditionCount(originalNat?.name || '', nat.count, updatedTotalEmployees),
-        };
-      });
-    });
-  };
-
-  return (
-    <Card>
-      <CardHeader
-        avatar={
-          <Avatar>
-            <Flag fontSize="inherit" />
-          </Avatar>
-        }
-        title="Nationalities Overview"
-      />
-      <CardContent>
-        <Stack spacing={3}>
-          <Card variant="outlined" sx={{ borderRadius: 1 }}>
-            <Box sx={{ overflowX: 'auto' }}>
-              <DataTable<Nationality>
-                columns={[
-                  {
-                    name: 'Nationality',
-                    formatter: (row) => (
-                      <Typography sx={{ whiteSpace: 'nowrap' }} variant="inherit">
-                        {row.name}
-                      </Typography>
-                    ),
-                  },
-                  {
-                    name: 'Count',
-                    formatter: (row) => (
-                      <Typography sx={{ whiteSpace: 'nowrap' }} variant="inherit">
-                        {row.count}
-                      </Typography>
-                    ),
-                  },
-                  {
-                    name: 'Percentage',
-                    formatter: (row) => (
-                      <Typography sx={{ whiteSpace: 'nowrap' }} variant="inherit">
-                        {row.percentage}%
-                      </Typography>
-                    ),
-                  },
-                  {
-                    name: 'Max Addition',
-                    formatter: (row) => (
-                      <Typography
-                        sx={{
-                          whiteSpace: 'nowrap',
-                          color: row.maxAdditionCount < 0 ? 'red' : 'inherit',
-                        }}
-                        variant="inherit"
-                      >
-                        {row.maxAdditionCount}
-                      </Typography>
-                    ),
-                  },
-                  {
-                    name: 'Max Addition Percentage',
-                    formatter: (row) => (
-                      <Typography sx={{ whiteSpace: 'nowrap' }} variant="inherit">
-                        {row.maxAdditionPercentage}%
-                      </Typography>
-                    ),
-                  },
-                  {
-                    name: 'Required Number to Add',
-                    formatter: (row, index) => (
-                      <OutlinedInput
-                        type="number"
-                        value={row.requiredNumberToAdd}
-                        onChange={(e) => handleRequiredNumberChange(index, Number(e.target.value))}
-                      />
-                    ),
-                  },
-                ]}
-                rows={nationalityData}
-              />
-              {/* <span>Sum percentage: {nationalityData.reduce((acc, curr) => acc + curr.percentage, 0)}%</span> */}
-              {/* <br /> */}
-              {/* <span>Total employees: {totalEmployees}</span> */}
-            </Box>
-          </Card>
-        </Stack>
-      </CardContent>
-    </Card>
-  );
-}
+import { NationalityReportChart } from './nationality-report-chart';
+import { NationalitiesTable } from './nationality-report-table';
+import { generatePDF } from './utils';
 
 function SingleReport({ params }: { params: { reportId: string } }): React.JSX.Element {
   const {
@@ -414,11 +200,9 @@ function SingleReport({ params }: { params: { reportId: string } }): React.JSX.E
                 </PropertyList>
               </Card>
 
-              <NationalitiesTable
-                nationalities={extractNationalities(nationalityReport as IGetNationalityReport)}
-                totalEmployees={nationalityReport?.totalEmployees || 0}
-                reportId={nationalityReport?.id || ''}
-              />
+              <NationalityReportChart reportId={nationalityReport?.id || ''} />
+
+              <NationalitiesTable reportId={nationalityReport?.id || ''} />
 
               <Card>
                 <CardHeader
