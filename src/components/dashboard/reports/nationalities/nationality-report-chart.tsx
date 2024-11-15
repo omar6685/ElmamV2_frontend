@@ -142,6 +142,7 @@ export function NationalityReportChart({ reportId }: NationalityReportChartProps
                           {...props}
                           payload={{
                             ...props.payload,
+                            flag: countries[props.payload?.value as keyof typeof countries]?.flag,
                             count: chartData[props.index].count,
                             maxAdditionCount: chartData[props.index].maxAdditionCount,
                           }}
